@@ -8,10 +8,12 @@ publish = true
 
 [features]
 default = []
-serde = ["dep:serde"]
+serde = ["dep:serde", "wkt"]
 grpc = ["dep:tonic", "dep:tonic-prost"]
 client = ["grpc"]
 server = ["grpc"]
+typescript = ["dep:ts-rs", "wkt"]
+wkt = []
 
 [dependencies]
 anyhow = "1"
@@ -23,6 +25,7 @@ prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }
 tonic = { version = "0.14", optional = true }
 tonic-prost = { version = "0.14", optional = true }
+ts-rs = { version = "12", optional = true }
 mint = "0.5"
 
 [build-dependencies]
