@@ -10,25 +10,26 @@ import public "quasar/euler_angles.proto";
 package quasar.pb.relay.datagrams.nav;
 
 enum NavigationSource {
-  UNKNOWN = 0;
-  NMEA_FILE = 1;
-  NMEA_SERIAL_PORT = 2;
-  NMEA_UDP = 3;
-  NMEA_TCP = 4;
-  VT45 = 5;
-  FAKE = 255;
+  NAVIGATION_SOURCE_UNKNOWN = 0;
+  NAVIGATION_SOURCE_NMEA_FILE = 1;
+  NAVIGATION_SOURCE_NMEA_SERIAL_PORT = 2;
+  NAVIGATION_SOURCE_NMEA_UDP = 3;
+  NAVIGATION_SOURCE_NMEA_TCP = 4;
+  NAVIGATION_SOURCE_VT45 = 5;
+  NAVIGATION_SOURCE_MAVLINK = 6;
+  NAVIGATION_SOURCE_FAKE = 255;
 }
 
 enum FixType {
-  Invalid = 0;
-  GPS = 1;
-  DGPS = 2;
-  PPS = 3;
-  RTK = 4;
-  FloatRTK = 5;
-  DeadReckoning = 6;
-  ManualInput = 7;
-  Simulation = 8;
+  FIX_TYPE_INVALID = 0;
+  FIX_TYPE_GPS = 1;
+  FIX_TYPE_DGPS = 2;
+  FIX_TYPE_PPS = 3;
+  FIX_TYPE_RTK = 4;
+  FIX_TYPE_FLOAT_RTK = 5;
+  FIX_TYPE_DEAD_RECKONING = 6;
+  FIX_TYPE_MANUAL_INPUT = 7;
+  FIX_TYPE_SIMULATION = 8;
 }
 
 message Telemetry {
