@@ -26,7 +26,14 @@ message ImageMetadata {
   float azimuth = 11;
   float drift_angle = 12;
   float divergence_angle = 13;
+  float velocity = 14;
+  float altitude = 15;
+  float fic = 16;
+  google.protobuf.Duration time_offset = 17;
+  google.protobuf.Duration time_duration = 18;
   google.protobuf.Timestamp timestamp = 19;
+  int32 sar_mode = 20;
+  bool valid_checksum = 21;
 }
 
 message Image {
