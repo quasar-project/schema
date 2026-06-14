@@ -19,9 +19,18 @@ message SetSourceRequest {
   datagrams.nav.NavigationSource source = 1;
 }
 
+message SimulateLineRequest {
+  quasar.pb.LatLon start = 1;
+  float speed_mps = 2;
+  float altitude_m = 3;
+  float heading_degrees = 4;
+  google.protobuf.Duration interval = 5;
+}
+
 service NavigationService {
   rpc Telemetry(TelemetryRequest) returns (stream TelemetryResponse);
   rpc SetSource(SetSourceRequest) returns (google.protobuf.Empty);
+  rpc SimulateLine(SimulateLineRequest) returns (google.protobuf.Empty);
   rpc Reload(google.protobuf.Empty) returns (google.protobuf.Empty);
 
 //  rpc ServiceDiagnostics(google.protobuf.Empty) returns (diagnostics.NetworkDiagnostics);

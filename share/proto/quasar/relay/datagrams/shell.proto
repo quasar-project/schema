@@ -9,22 +9,10 @@ message ExitStatus {
   string message = 2;
 }
 
-message File {
-  string filename = 1;
-  bytes data = 2;
-}
-
-message Tarball {
-  string filename = 1;
-  bytes data = 2;
-}
-
 message ExecutionResult {
   optional ExitStatus exit_status = 1;
   oneof artifact {
     string stdout_text = 2 [json_name = "stdout"];
-    Tarball tarball = 3;
-    File file = 4;
   }
 }
 
@@ -46,7 +34,5 @@ enum ExecutionPolicy {
 
 enum ExecutionArtifactType {
   EXECUTION_ARTIFACT_TYPE_STDOUT = 0;
-  EXECUTION_ARTIFACT_TYPE_TARBALL = 1;
-  EXECUTION_ARTIFACT_TYPE_FILE = 2;
   EXECUTION_ARTIFACT_TYPE_NONE = 3;
 }
