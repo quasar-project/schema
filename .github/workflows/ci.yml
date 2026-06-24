@@ -78,7 +78,7 @@ jobs:
           printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
           
           conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan 
-          conan remote login gh_actions "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
 
       - name: Build with Conan
         run: conan build . --build=missing
@@ -145,7 +145,7 @@ jobs:
           sed -i '/compiler.cppstd=/c\compiler.cppstd=20' ~/.conan2/profiles/default
           printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
           conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan || true
-          conan remote login gh_actions "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
 
       - name: Create Conan package
         run: conan create . -b missing --user quasar --channel dev
