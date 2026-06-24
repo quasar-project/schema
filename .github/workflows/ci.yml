@@ -105,6 +105,9 @@ jobs:
       - name: Build with Conan
         run: conan build . --build=missing
 
+      - name: Upload built dependencies
+        run: conan upload "*" -r whs31 -c || echo "Failed to upload dependencies"
+
   publish:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build-rust, build-cxx]
