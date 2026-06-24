@@ -1,0 +1,8 @@
+requirements:
+  mms: "[>=3.0.6]"
+  protobuf: "6.33.5"
+  abseil: "20260107.1"
+
+build_requirements:
+  cmake: "[>=3.23.5]"
+  protobuf: "<host_version>"

@@ -1,0 +1,46 @@
+syntax = "proto3";
+
+import public "google/protobuf/timestamp.proto";
+import public "google/protobuf/duration.proto";
+
+import public "mms/angle.proto";
+import public "mms/distance.proto";
+import public "mms/velocity.proto";
+import public "mms/uuid.proto";
+
+package quasar.pb;
+
+enum ImageType {
+  IMAGE_TYPE_TELESCOPIC = 0;
+  IMAGE_TYPE_STRIP = 1;
+}
+
+message ImageMetadata {
+  string filename = 30;
+  mms.pb.Uuid uuid = 1;
+  ImageType type = 2;
+  double latitude = 3;
+  double longitude = 4;
+  float dx = 5;
+  float dy = 6;
+  mms.pb.Distance x0 = 7;
+  mms.pb.Distance y0 = 8;
+  mms.pb.Distance lx = 9;
+  mms.pb.Distance ly = 10;
+  mms.pb.Angle azimuth = 11;
+  mms.pb.Angle drift_angle = 12;
+  mms.pb.Angle divergence_angle = 13;
+  mms.pb.Velocity velocity = 14;
+  mms.pb.Distance altitude = 15;
+  float fic = 16;
+  google.protobuf.Duration time_offset = 17;
+  google.protobuf.Duration time_duration = 18;
+  google.protobuf.Timestamp timestamp = 19;
+  int32 sar_mode = 20;
+  bool valid_checksum = 21;
+}
+
+message Image {
+  ImageMetadata metadata = 1;
+  bytes image_data = 2;
+}

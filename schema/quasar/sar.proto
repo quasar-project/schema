@@ -1,0 +1,103 @@
+syntax = "proto3";
+
+package quasar.pb.sar;
+
+import public "google/protobuf/timestamp.proto";
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/duration.proto";
+
+import public "mms/uuid.proto";
+import public "mms/sockaddr.proto";
+
+import public "quasar/args.proto";
+import public "quasar/error.proto";
+import public "quasar/zmq.proto";
+
+message BoardInfo {
+  uint32 version_major = 1;
+  uint32 version_minor = 2;
+  string description = 3;
+}
+
+message SystemInfo {
+  string os_name = 1;
+  string target_triple = 2;
+}
+
+message ExitStatus {
+  uint32 code = 1;
+  string message = 2;
+}
+
+// Sent by a ground/control DEALER socket to the SAR ROUTER socket.
+message Request {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_DEALER;
+  option (quasar.pb.zmq_flow) = "ground/control DEALER -> Status ROUTER";
+
+  message Header {
+    mms.pb.Uuid request_id = 1;
+  }
+
+  message Tty {
+    mms.pb.SockaddrV4 address = 1;
+    bool force_color = 2;
+  }
+
+  message FormTelescopicRequest {
+    ControlArgs radar_args = 1;
+    FormTelescopicArgs dsp_args = 2;
+  }
+
+  message FormFocusedTelescopicRequest {
+    ControlArgs radar_args = 1;
+    AutofocusArgs dsp_args = 2;
+  }
+
+  message FormStripRequest {
+    ControlArgs radar_args = 1;
+    FormStripArgs dsp_args = 2;
+  }
+
+  message FormVideoRequest {
+    ControlArgs radar_args = 1;
+    VideoArgs dsp_args = 2;
+  }
+
+  Header header = 1;
+
+  oneof body {
+    google.protobuf.Empty get_hardware_id = 2;
+    google.protobuf.Empty get_board_info = 3;
+    google.protobuf.Empty get_os_info = 4;
+    google.protobuf.Empty clear_storage = 5;
+    google.protobuf.Empty poweroff = 6;
+    google.protobuf.Empty reboot = 7;
+
+    Tty get_tty = 8;
+    Tty set_tty = 9;
+
+    FormTelescopicRequest form_telescopic_image = 10;
+    FormFocusedTelescopicRequest form_focused_telescopic_image = 11;
+    FormStripRequest begin_strip_image = 12;
+    google.protobuf.Empty end_strip_image = 13;
+    FormVideoRequest begin_video = 14;
+    google.protobuf.Empty end_video = 15;
+  }
+}
+
+// Sent by the SAR ROUTER socket in reply to Request.
+message Response {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_ROUTER;
+  option (quasar.pb.zmq_flow) = "Status ROUTER -> ground/control DEALER";
+
+  Request.Header header = 1;
+
+  oneof body {
+    google.protobuf.Empty ok = 2;
+    Error error = 3;
+    mms.pb.Uuid hardware_id = 4;
+    BoardInfo board_info = 5;
+    SystemInfo system_info = 6;
+  }
+}
+

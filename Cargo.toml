@@ -1,37 +1,31 @@
 [package]
-name = "quasar_protobufs"
-version = "0.5.0"
-authors = ["whs31 <whs31@github.io>"]
-keywords = ["protocol", "protobuf"]
+name = "quasar_schema"
+version = "1.0.0"
 edition = "2024"
-publish = true
+authors = ["whs31 <whs31@github.io>"]
+keywords = ["protocol", "network", "uav", "protobuf"]
+license = "MIT OR Apache-2.0"
+
+[lib]
+doctest = false
 
 [features]
 default = []
-serde = ["dep:serde", "wkt"]
-grpc = ["dep:tonic", "dep:tonic-prost"]
-client = ["grpc"]
-server = ["grpc"]
-typescript = ["dep:ts-rs", "dep:swc_common", "wkt"]
-legacy = []
+serde = ["dep:serde", "wkt", "mms_protocol/serde"]
+legacy = ["mms_protocol/legacy"]
 wkt = []
-vendored-protobuf = ["protobuf-src"]
+vendored-protobuf = ["dep:protobuf-src", "mms_protocol/vendored-protobuf"]
+
 
 [dependencies]
-anyhow = "1"
-uuid = "1"
-chrono = { version = "0.4", features = ["clock"] }
-serde = { version = "1.0", features = ["derive"], optional = true }
-mint = "0.5"
+mms_protocol = { version = "3.0.1", registry = "whs31" }
 
 prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }
-tonic = { version = "0.14", optional = true }
-tonic-prost = { version = "0.14", optional = true }
-ts-rs = { version = "12", features = ["serde-compat", "uuid-impl", "format"], optional = true }
-swc_common = { version = ">=18", optional = true }
+
+serde = { version = "1.0", features = ["derive"], optional = true }
 
 [build-dependencies]
-tonic-build = "0.14"
-tonic-prost-build = "0.14"
-protobuf-src = {  version = "2", optional = true }
+prost-build = "0.14"
+protobuf-src = { version = "2", optional = true }
+mms_protocol = { version = "3.0.1", registry = "whs31" }

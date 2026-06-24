@@ -1,4 +1,5 @@
 alias v := version
+alias fmt := format
 
 default:
     @echo "Usage: just <command> [options]"
@@ -12,5 +13,7 @@ graph:
 version *ARGS='--show':
     @wucc version {{ ARGS }}
 
-generate-ts:
-    @cargo test --features=serde,grpc,client,server,typescript
+[doc("Formats Rust and C++ code")]
+format:
+    cargo +nightly fmt --all
+    find . -name '*.c' -o -name '*.cc' -o -name '*.cpp' -o -name '*.h' -o -name '*.hh' -o -name '*.hpp' -exec clang-format -i {} \;

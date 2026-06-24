@@ -1,41 +1,62 @@
 import os
-import platform
 
 from conan import ConanFile
-from conan.tools.cmake import CMake, CMakeToolchain, cmake_layout, CMakeDeps
 from conan.tools.build import check_min_cppstd
+from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
+from conan.tools.env import VirtualRunEnv
 from conan.tools.files import rmdir
 
 
-class QuasarProtobufsRecipe(ConanFile):
-    name = "quasar.protobufs"
-    version = "0.5.0"
-    description = "Protobufs pack related to QuaSAR"
+class QuaSARSchemaRecipe(ConanFile):
+    name = "quasar_schema"
+    version = "1.0.0"
+    package_type = "shared-library"
+    description = "QuaSAR Schema protobuf contract"
     author = "whs31 <whs31@github.io>"
-    topics = ("grpc", "protocol", "network")
+    topics = ("protobuf", "protocol", "network", "zeromq")
     settings = "os", "arch", "compiler", "build_type"
-    options = {"grpc": [True, False]}
-    default_options = {"grpc": True}
-    exports = "CMakeLists.txt", "cmake/*"
-    exports_sources = "*", "!build/*", "!CMakeUserPresets.json", "!.git/*", "!target/*"
+    exports = "CMakeLists.txt"
+    exports_sources = (
+        "*",
+        "!build/*",
+        "!CMakeUserPresets.json",
+        "!.git/*",
+        "!.idea/*",
+        "!target/*",
+    )
 
     user = "quasar"
     channel = "dev"
+
+    python_requires = "conan_helpers/0.2@radar/dev"
+    python_requires_extend = "conan_helpers.Base"
 
     @property
     def _min_cppstd(self):
         return "20"
 
     def requirements(self):
-        if self.options.grpc:
-            self.requires(
-                "grpc/1.72.0", transitive_libs=True, transitive_headers=True, force=True
-            )
-        self.requires("protobuf/5.27.0", transitive_libs=True, transitive_headers=True)
+        self.req(
+            "mms@radar/dev",
+            transitive_libs=True,
+            transitive_headers=True,
+        )
+        self.req(
+            "protobuf",
+            options={"shared": True},
+            transitive_libs=True,
+            transitive_headers=True,
+        )
+        self.req(
+            "abseil",
+            options={"shared": True},
+            transitive_libs=True,
+            transitive_headers=True,
+        )
 
     def build_requirements(self):
-        self.tool_requires("cmake/[>=3.23.5]")
-        self.tool_requires("protobuf/<host_version>")
+        self.req("cmake", tool=True)
+        self.req("protobuf", tool=True)
 
     def layout(self):
         cmake_layout(self)
@@ -44,13 +65,26 @@ class QuasarProtobufsRecipe(ConanFile):
         if self.settings.get_safe("compiler.cppstd"):
             check_min_cppstd(self, self._min_cppstd)
 
+    def configure(self):
+        self.options["abseil"].shared = True
+        self.options["protobuf"].shared = True
+
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
+
         tc = CMakeToolchain(self)
-        tc.variables["BUILD_SHARED_LIBS"] = False
-        tc.variables["QUASAR_PROTOBUFS_GRPC"] = self.options.grpc
+        tc.shared = True
+
+        mms_dep = self.dependencies["mms"]
+        tc.variables["QUASAR_SCHEMA_MMS_PROTO_DIR"] = os.path.join(
+            mms_dep.package_folder,
+            "schema",
+        )
         tc.generate()
+
+        ms = VirtualRunEnv(self)
+        ms.generate()
 
     def build(self):
         cmake = CMake(self)
@@ -62,13 +96,16 @@ class QuasarProtobufsRecipe(ConanFile):
         cmake.install()
         rmdir(self, os.path.join(self.package_folder, "lib", "cmake"))
         rmdir(self, os.path.join(self.package_folder, "lib", "pkgconfig"))
-        rmdir(self, os.path.join(self.package_folder, "res"))
 
     def package_info(self):
-        self.cpp_info.set_property("cmake_file_name", "quasar.protobufs")
-        self.cpp_info.set_property("cmake_target_name", "quasar::protobufs")
-        self.cpp_info.libs = ["quasar-protobufs"]
-        self.cpp_info.requires = ["protobuf::protobuf"]
-        if self.options.grpc:
-            self.cpp_info.requires.append("grpc::grpc")
-        self.cpp_info.resdirs = ["share"]
+        self.cpp_info.set_property("cmake_file_name", "QuaSARSchema")
+        self.cpp_info.set_property(
+            "cmake_target_name", "quasar::schema"
+        )
+        self.cpp_info.libs = ["quasar_schema"]
+        self.cpp_info.requires = [
+            "mms::Protocol",
+            "protobuf::protobuf",
+            "abseil::abseil",
+        ]
+        self.cpp_info.resdirs = ["schema"]

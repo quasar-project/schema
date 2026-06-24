@@ -1,7 +1,15 @@
 const SERDE_DERIVES: &str = "serde::Serialize, serde::Deserialize";
 const SERDE_ATTRIBUTES: &str = "#[serde(rename_all = \"camelCase\")]";
-const TYPESCRIPT_DERIVES: &str = "ts_rs::TS";
-const TYPESCRIPT_ATTRIBUTES: &str = "#[ts(export)]";
+const PROTO_FILES: &[&str] = &[
+  "quasar/args.proto",
+  "quasar/error.proto",
+  "quasar/image.proto",
+  "quasar/nav.proto",
+  "quasar/route.proto",
+  "quasar/sar.proto",
+  "quasar/status.proto",
+  "quasar/zmq.proto",
+];
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
   #[cfg(feature = "vendored-protobuf")]
@@ -9,59 +17,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     std::env::set_var("PROTOC", protobuf_src::protoc());
   }
 
-  let mut b = tonic_prost_build::configure().include_file("_includes.rs");
+  let out_dir = std::path::PathBuf::from(std::env::var_os("OUT_DIR").ok_or("OUT_DIR is unset")?);
+  let mut b = prost_build::Config::new();
+  b.include_file("_includes.rs");
+  b.file_descriptor_set_path(out_dir.join("quasar_schema_descriptor.bin"));
+  b.extern_path(".mms.pb", "::mms_protocol");
   let attributes = if cfg!(feature = "serde") {
-    if cfg!(feature = "typescript") {
-      Some(format!(
-        "#[derive({SERDE_DERIVES}, {TYPESCRIPT_DERIVES})] {SERDE_ATTRIBUTES} {TYPESCRIPT_ATTRIBUTES}"
-      ))
-    } else {
-      Some(format!("#[derive({SERDE_DERIVES})] {SERDE_ATTRIBUTES}"))
-    }
-  } else if cfg!(feature = "typescript") {
-    Some(format!(
-      "#[derive({TYPESCRIPT_DERIVES})] {TYPESCRIPT_ATTRIBUTES}"
-    ))
+    Some(format!("#[derive({SERDE_DERIVES})] {SERDE_ATTRIBUTES}"))
   } else {
     None
   };
   if let Some(attributes) = attributes {
-    b = b
-      .message_attribute(".", &attributes)
+    b.message_attribute(".", &attributes)
       .enum_attribute(".", &attributes);
   }
   if cfg!(feature = "legacy") {
-    b = b.protoc_arg("--experimental_allow_proto3_optional");
+    b.protoc_arg("--experimental_allow_proto3_optional");
   }
-  b = b
-    .build_client(cfg!(feature = "client"))
-    .build_server(cfg!(feature = "server"))
-    .use_arc_self(true);
   if cfg!(feature = "wkt") {
-    b = b.compile_well_known_types(true)
+    b.compile_well_known_types();
   }
-  b.compile_protos(
-    &[
-      "share/proto/quasar/dim2.proto",
-      "share/proto/quasar/dim3.proto",
-      "share/proto/quasar/euler_angles.proto",
-      "share/proto/quasar/latlon.proto",
-      "share/proto/quasar/uuid.proto",
-      "share/proto/quasar/image.proto",
-      "share/proto/quasar/relay/datagrams/nav.proto",
-      "share/proto/quasar/relay/datagrams/shell.proto",
-      "share/proto/quasar/relay/datagrams/status.proto",
-      "share/proto/quasar/relay/diagnostics/diagnostics.proto",
-      #[cfg(feature = "grpc")]
-      "share/proto/quasar/relay/services/license.proto",
-      #[cfg(feature = "grpc")]
-      "share/proto/quasar/relay/services/nav.proto",
-      #[cfg(feature = "grpc")]
-      "share/proto/quasar/relay/services/shell.proto",
-      #[cfg(feature = "grpc")]
-      "share/proto/quasar/relay/services/status.proto",
-    ],
-    &["share/proto"],
-  )?;
+  let proto_files = PROTO_FILES
+    .iter()
+    .map(|file| std::path::Path::new("schema").join(file))
+    .collect::<Vec<_>>();
+  b.compile_protos(&proto_files, &["schema", mms_protocol::PROTO_INCLUDE_DIR])?;
   Ok(())
 }

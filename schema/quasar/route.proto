@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+import public "google/protobuf/struct.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "mms/latlon.proto";
+
+package quasar.pb.route;
+
+message Track {
+  message Point {
+    message Event {
+      // Stable generic event id, e.g. "recording.start",
+      // "recording.midpoint", "recording.stop".
+      string type = 1;
+
+      // Optional UI-facing text.
+      string label = 2;
+
+      // Default false means event points are preserved by filtering/simplification.
+      // Set true only for intermediate/midpoint events.
+      bool can_be_filtered = 3;
+
+      // Generic typed payload for UI hints: color, icon, source, payload ids, etc.
+      google.protobuf.Struct metadata = 4;
+    }
+
+    mms.pb.LatLon coordinate = 1;
+    google.protobuf.Timestamp timestamp = 2;
+
+    // Absence means a normal track point.
+    Event event = 3;
+
+    float altitude = 4;
+  }
+
+  repeated Point points = 1;
+}

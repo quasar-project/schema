@@ -68,6 +68,16 @@ jobs:
       - name: Setup Conan
         uses: turtlebrowser/get-conan@main
 
+      - name: Cache Conan packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.conan2/p
+            ~/.conan2/download_cache
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
+
       - name: Configure Conan
         run: |
           conan profile detect --force
@@ -82,9 +92,6 @@ jobs:
 
       - name: Build with Conan
         run: conan build . --build=missing
-
-      - name: Cache Conan packages
-        run: conan upload "*" -r whs31 -c || true
 
   publish:
     if: startsWith(github.ref, 'refs/tags/')
@@ -136,6 +143,16 @@ jobs:
       - name: Setup Conan for publishing
         uses: turtlebrowser/get-conan@main
 
+      - name: Cache Conan packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.conan2/p
+            ~/.conan2/download_cache
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
+
       - name: Configure Conan for publishing
         run: |
           conan profile detect --force
@@ -151,7 +168,4 @@ jobs:
         run: conan create . -b missing --user quasar --channel dev
 
       - name: Upload to Conan registry
-        run: conan upload "quasar.protobufs/*" -r whs31 --force -c
-
-      - name: Cache Conan packages
-        run: conan upload "*" -r whs31 -c || true
+        run: conan upload "quasar_schema/*" -r whs31 --force -c
