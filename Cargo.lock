@@ -369,10 +369,7 @@ dependencies = [
  "prost-build",
  "prost-types",
  "protobuf-src",
- "semver",
  "serde",
- "thiserror",
- "uuid",
 ]
 
 [[package]]

@@ -19,9 +19,6 @@ vendored-protobuf = ["dep:protobuf-src", "mms_protocol/vendored-protobuf"]
 
 [dependencies]
 mms_protocol = { version = "3.0.1", registry = "whs31" }
-uuid = "1"
-semver = "1"
-thiserror = "2"
 
 prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }

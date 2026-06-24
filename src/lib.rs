@@ -19,10 +19,6 @@ pub const PROTO_FILES: &[&str] = &[
 pub const PROTO_FILE_DESCRIPTOR_SET: &[u8] =
   include_bytes!(concat!(env!("OUT_DIR"), "/quasar_schema_descriptor.bin"));
 
-mod error;
-
-pub use self::error::{Error, Result};
-
 #[cfg(test)]
 mod tests {
   use super::*;
