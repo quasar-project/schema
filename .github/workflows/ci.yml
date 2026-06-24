@@ -10,7 +10,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CARGO_REGISTRY_WH31_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  CARGO_REGISTRY_WHS31_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
   CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
 
@@ -46,7 +46,7 @@ jobs:
           global-credential-providers = ["cargo:token"]
           
           [registries.whs31]
-          index = "sparse+https://af.whs31.com/artifactory/api/cargo/cargo-local/index/"
+          index = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
           EOF
 
       - name: Configure Cargo credentials
@@ -77,8 +77,8 @@ jobs:
           sed -i '/compiler.cppstd=/c\compiler.cppstd=20' ~/.conan2/profiles/default
           printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
           
-          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/conan 
-          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan 
+          conan remote login gh_actions "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
 
       - name: Build with Conan
         run: conan build . --build=missing
@@ -119,7 +119,7 @@ jobs:
           global-credential-providers = ["cargo:token"]
           
           [registries.whs31]
-          index = "sparse+https://af.whs31.com/artifactory/api/cargo/cargo-local/index/"
+          index = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
           EOF
           
           cat > ~/.cargo/credentials.toml << EOF
@@ -144,8 +144,8 @@ jobs:
           sed -i '/compiler.libcxx=/c\compiler.libcxx=libstdc++11' ~/.conan2/profiles/default
           sed -i '/compiler.cppstd=/c\compiler.cppstd=20' ~/.conan2/profiles/default
           printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
-          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/conan || true
-          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan || true
+          conan remote login gh_actions "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
 
       - name: Create Conan package
         run: conan create . -b missing --user quasar --channel dev
