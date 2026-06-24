@@ -13,6 +13,8 @@ env:
   CARGO_REGISTRY_WHS31_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
   CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
   CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
+  QT_VERSION: '6.11.*'
+  QT_CACHE_KEY: qt-6.11
 
 jobs:
   build-rust:
@@ -65,6 +67,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          install-deps: true
+          cache: true
+          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
+
       - name: Setup Conan
         uses: turtlebrowser/get-conan@main
 
@@ -74,8 +85,9 @@ jobs:
           path: |
             ~/.conan2/p
             ~/.conan2/download_cache
-          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
+          key: ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
           restore-keys: |
+            ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-
             ${{ runner.os }}-conan-
 
       - name: Configure Conan
@@ -140,6 +152,15 @@ jobs:
       - name: Publish to Cargo Registry
         run: cargo publish --no-verify --registry whs31 || echo "Already published, skipping"
 
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          install-deps: true
+          cache: true
+          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
+
       - name: Setup Conan for publishing
         uses: turtlebrowser/get-conan@main
 
@@ -149,8 +170,9 @@ jobs:
           path: |
             ~/.conan2/p
             ~/.conan2/download_cache
-          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
+          key: ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
           restore-keys: |
+            ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-
             ${{ runner.os }}-conan-
 
       - name: Configure Conan for publishing
