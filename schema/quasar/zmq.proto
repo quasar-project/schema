@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+import public "google/protobuf/descriptor.proto";
+
+package quasar.pb;
+
+// ZeroMQ socket roles used by messages in this schema.
+enum ZmqSocket {
+  ZMQ_SOCKET_UNSPECIFIED = 0;
+  ZMQ_SOCKET_REQ = 1;
+  ZMQ_SOCKET_REP = 2;
+  ZMQ_SOCKET_PUB = 3;
+  ZMQ_SOCKET_SUB = 4;
+  ZMQ_SOCKET_PUSH = 5;
+  ZMQ_SOCKET_PULL = 6;
+  ZMQ_SOCKET_DEALER = 7;
+  ZMQ_SOCKET_ROUTER = 8;
+}
+
+extend google.protobuf.MessageOptions {
+  // Documents the expected ZeroMQ socket role for a transmitted message.
+  ZmqSocket zmq_socket = 51001;
+
+  // Human-readable data-flow note for tools and generated descriptor readers.
+  string zmq_flow = 51002;
+}

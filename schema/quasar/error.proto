@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package quasar.pb;
+
+enum Error {
+  ERROR_UNKNOWN = 0;
+
+  // todo: extend with the proper error types
+}

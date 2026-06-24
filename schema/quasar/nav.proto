@@ -1,0 +1,100 @@
+syntax = "proto3";
+
+package quasar.pb.nav;
+
+import public "google/protobuf/timestamp.proto";
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/duration.proto";
+
+import public "mms/angle.proto";
+import public "mms/latlon.proto";
+import public "mms/euler_angles.proto";
+import public "mms/dim.proto";
+import public "mms/uuid.proto";
+import public "mms/velocity.proto";
+import public "mms/distance.proto";
+
+import public "quasar/zmq.proto";
+import public "quasar/error.proto";
+
+enum NavigationSource {
+  NAVIGATION_SOURCE_UNKNOWN = 0;
+  NAVIGATION_SOURCE_NMEA_FILE = 1;
+  NAVIGATION_SOURCE_NMEA_SERIAL_PORT = 2;
+  NAVIGATION_SOURCE_NMEA_TCP = 3;
+  NAVIGATION_SOURCE_MAVLINK = 4;
+  NAVIGATION_SOURCE_FAKE = 255;
+}
+
+enum GpsFix {
+  GPS_FIX_NO_FIX = 0;
+  GPS_FIX_TIME_ONLY = 1;
+  GPS_FIX_2D = 2;
+  GPS_FIX_3D = 3;
+  GPS_FIX_DGPS = 4;
+  GPS_FIX_RTK_FLOAT = 5;
+  GPS_FIX_RTK_FIXED = 6;
+  GPS_FIX_PPP = 7;
+}
+
+// Published by a Nav telemetry PUB socket.
+message Telemetry {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_PUB;
+  option (quasar.pb.zmq_flow) = "Nav telemetry PUB -> subscribers";
+
+  mms.pb.LatLon coordinate = 1;
+  mms.pb.Distance altitude = 2;
+  mms.pb.Distance altitude_barometric = 15;
+  mms.pb.Velocity velocity_course = 3;
+  mms.pb.Velocity velocity_vertical = 4;
+  mms.pb.Dim3 gyroscope = 5;
+  mms.pb.Dim3 accelerometer = 6;
+  mms.pb.Dim3 compass = 11;
+  mms.pb.Angle gps_course = 16;
+  mms.pb.EulerAngles euler_axes = 7;
+  google.protobuf.Timestamp timestamp = 8;
+  float pressure = 9;
+  float temperature = 10;
+  int32 satellites = 12;
+  NavigationSource navigation_source = 13;
+  GpsFix fix = 14;
+}
+
+// Sent by a ground/control DEALER socket to the Nav ROUTER socket.
+message Request {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_DEALER;
+  option (quasar.pb.zmq_flow) = "ground/control DEALER -> Nav ROUTER";
+
+  message Header {
+    mms.pb.Uuid request_id = 1;
+  }
+
+  message SimulateLineRequest {
+    mms.pb.LatLon start = 1;
+    mms.pb.Velocity speed_mps = 2;
+    mms.pb.Distance altitude = 3;
+    mms.pb.Angle heading = 4;
+    google.protobuf.Duration interval = 5;
+  }
+
+  Header header = 1;
+
+  oneof body {
+    NavigationSource set_source = 2;
+    google.protobuf.Empty reload = 3;
+    SimulateLineRequest simulate_line = 4;
+  }
+}
+
+// Sent by the Nav ROUTER socket in reply to Request.
+message Response {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_ROUTER;
+  option (quasar.pb.zmq_flow) = "Nav ROUTER -> ground/control DEALER";
+
+  Request.Header header = 1;
+
+  oneof body {
+    google.protobuf.Empty ok = 2;
+    Error error = 3;
+  }
+}

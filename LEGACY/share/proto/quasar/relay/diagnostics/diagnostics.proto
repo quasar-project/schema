@@ -1,7 +1,0 @@
-syntax = "proto3";
-
-package quasar.pb.relay.diagnostics;
-
-message NetworkDiagnostics {
-  uint32 active_streams = 1;
-}

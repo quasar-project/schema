@@ -4,21 +4,11 @@ import public "quasar/uuid.proto";
 
 package quasar.pb.relay.datagrams.shell;
 
-message ExitStatus {
-  uint32 code = 1;
-  string message = 2;
-}
-
 message ExecutionResult {
   optional ExitStatus exit_status = 1;
   oneof artifact {
     string stdout_text = 2 [json_name = "stdout"];
   }
-}
-
-message SockAddr {
-  string host = 1;
-  uint32 port = 2;
 }
 
 enum WorkingDirectory {

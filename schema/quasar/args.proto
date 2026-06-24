@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+import "google/protobuf/wrappers.proto";
+
+import public "mms/uuid.proto";
+import public "mms/dim.proto";
+
+package quasar.pb;
+
+enum DSPType {
+  RustFFT = 0;
+  CUDA = 1;
+}
+
+enum DriftAngleCalculationMethod {
+  SpectrumPeak = 0;
+  GaussianFit = 1;
+}
+
+enum ColorMap {
+  Grayscale = 0;
+  Jet = 1;
+}
+
+message SharedFormArgs {
+  /// Входной файл голограммы
+  string input = 1;
+
+  /// Тип вычислителя
+  ///
+  /// Ключ: `-D`, `--dsp`, `--dsp-type`
+  DSPType dsp_type = 2;
+
+  /// Режим РЛС
+  ///
+  /// Ключ: `-m`, `--mode`
+  /// По умолчанию: 1
+  google.protobuf.UInt32Value mode = 3;
+
+  /// Смещение по времени в секундах
+  ///
+  /// Ключ: `-t`, `-Tshift`, `--time-shift`
+  /// По умолчанию: 1.0 с
+  google.protobuf.Duration time_shift = 4;
+
+  /// Время синтезирования в секундах
+  ///
+  /// Ключ: `-T`, `--Ts`, `--synthesis-time`
+  /// По умолчанию: 0.5 с
+  google.protobuf.Duration synthesis_time = 5;
+
+  /// Количество отсчётов в синхопаузе.
+  ///
+  /// Если значение задано пользователем, оно будет использовано вместо значения из конфигурационного
+  /// файла для данного режима работы РЛС.
+  ///
+  /// Ключ: `--nsync`, `--sync-sample-count`
+  google.protobuf.UInt32Value sync_sample_count = 6;
+
+  /// Высота ландшафта относительно уровня моря в точке старта, в метрах
+  ///
+  /// Ключ: `--e0`, `--terrain-altitude`
+  /// По умолчанию: 0.0
+  google.protobuf.FloatValue terrain_altitude = 7;
+
+  /// Высота носителя в метрах
+  ///
+  /// Если значение задано пользователем, оно будет использовано вместо высоты носителя
+  /// из навигационного файла
+  ///
+  /// Ключ: `-e`, `--altitude`
+  google.protobuf.FloatValue altitude = 8;
+
+  /// Скорость носителя в км/ч
+  ///
+  /// Если значение задано пользователем, оно будет использовано вместо скорости носителя
+  /// из навигационного файла
+  ///
+  /// Ключ: `-v`, `--velocity`
+  google.protobuf.FloatValue velocity = 9;
+
+  /// Коэффициент частотной интерполяции
+  ///
+  /// Ключ: `--fic`
+  /// По умолчанию: 1
+  google.protobuf.UInt32Value fic = 10;
+
+  /// Шаг по дальности, м/px
+  ///
+  /// Ключ: `--dx`
+  /// По умолчанию: 1.0
+  google.protobuf.FloatValue dx = 11;
+
+  /// Шаг по путевой дальности, м/px
+  ///
+  /// Ключ: `--dy`
+  /// По умолчанию: 1.0
+  google.protobuf.FloatValue dy = 12;
+
+  /// Ближняя граница кадра в метрах
+  ///
+  /// Ключ: `--x0`, `--near-edge`
+  /// По умолчанию: 100.0
+  google.protobuf.FloatValue near_edge = 13;
+
+  /// Смещение кадра
+  ///
+  /// Ключ: `--y0`, `--frame-offset`
+  /// По умолчанию: 400.0
+  google.protobuf.FloatValue frame_offset = 14;
+
+  /// Протяженность кадра по дальности в метрах
+  ///
+  /// Ключ: `--lx`, `--image-width`
+  /// По умолчанию: 2000.0
+  google.protobuf.FloatValue image_width = 15;
+
+  /// Протяженность кадра по путевой дальности в метрах
+  ///
+  /// Ключ: `--ly`, `--image-height`
+  /// По умолчанию: 400.0
+  google.protobuf.FloatValue image_height = 16;
+
+  /// Угол сноса в градусах
+  ///
+  /// Если значение задано пользователем, оно будет использовано вместо расчётного
+  /// значения угла сноса
+  ///
+  /// Ключ: `--da`, `--drift-angle`
+  google.protobuf.FloatValue drift_angle = 17;
+
+  /// Метод расчёта угла сноса
+  ///
+  /// Ключ: `--dcm`, `--drift-angle-method`
+  /// По умолчанию: GaussianFit
+  DriftAngleCalculationMethod drift_angle_method = 18;
+
+  /// Цветовая схема результирующего изображения
+  ///
+  /// Ключ: `--output-color-map`
+  /// По умолчанию: Grayscale
+  ColorMap output_color_map = 19;
+
+  /// Множитель яркости
+  ///
+  /// Ключ: `-b`, `--brightness-multiplier`
+  /// По умолчанию: 1.0
+  google.protobuf.FloatValue brightness_multiplier = 20;
+
+  /// Задержка между голограммой и файлом навигации.
+  ///
+  /// По умолчанию: не задана,
+  /// рассчитывается исходя из разницы между последним временем записи в файлы.
+  ///
+  /// Ключ: `--nav-delay`
+  /// Sentinel-value: 0.0
+  google.protobuf.Duration nav_delay = 21;
+
+  /// Сохранение отладочных графиков наряду с основным изображением
+  ///
+  /// Ключ: `-P`, `--plots`
+  /// По умолчанию: false
+  bool plots = 22;
+}
+
+message FormTelescopicArgs {
+  SharedFormArgs base = 1;
+
+  /// Угол расхождения луча диаграммы направленности в градусах
+  ///
+  /// Ключ: `--div`, `--divergence-angle`
+  /// По умолчанию: 20.0
+  google.protobuf.FloatValue divergence_angle = 2;
+}
+
+message FormStripArgs {
+  SharedFormArgs base = 1;
+
+  /// Продолжительность полосовой съемки. Если не задано, будет взята максимально возможная
+  /// продолжительность голограммы исходя из частоты оцифровки АЦП для текущего режима РЛС.
+  ///
+  /// Ключ: `--strip-timespan`
+  google.protobuf.Duration strip_timespan = 2;
+
+  /// Коэффициент множителя скорости
+  ///
+  /// Ключ: `--velocity-multiplier`
+  /// По умолчанию: 1.0
+  google.protobuf.FloatValue velocity_multiplier = 3;
+}
+
+message AutofocusArgs {
+  SharedFormArgs base = 1;
+
+  /// Координаты X и Y центра сектора фокусировки в метрах, через запятую
+  ///
+  /// Ключ: `--center`, `--autofocus-center`
+  mms.pb.Dim2 autofocus_center = 2;
+
+  /// Сторона квадрата сектора фокусировки в метрах
+  ///
+  /// Ключ: `--side`, `--autofocus-side`
+  /// По умолчанию: 50.0
+  google.protobuf.FloatValue autofocus_side = 3;
+
+  /// Угол расхождения луча диаграммы направленности в градусах
+  ///
+  /// Ключ: `--div`, `--divergence-angle`
+  /// По умолчанию: 20.0
+  google.protobuf.FloatValue divergence_angle = 4;
+
+  /// Сохранение промежуточных кадров для отладки
+  ///
+  /// Ключ: `--keep-frames`
+  /// По умолчанию: false
+  bool keep_frames = 5;
+}
