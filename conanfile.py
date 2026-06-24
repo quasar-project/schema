@@ -16,7 +16,14 @@ class QuaSARSchemaRecipe(ConanFile):
     topics = ("protobuf", "protocol", "network", "zeromq")
     settings = "os", "arch", "compiler", "build_type"
     exports = "CMakeLists.txt"
-    exports_sources = "*", "!build/*", "!CMakeUserPresets.json", "!.git/*", "!target/*"
+    exports_sources = (
+        "*",
+        "!build/*",
+        "!CMakeUserPresets.json",
+        "!.git/*",
+        "!.idea/*",
+        "!target/*",
+    )
 
     user = "quasar"
     channel = "dev"

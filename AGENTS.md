@@ -60,6 +60,6 @@ The Conan package must:
 
 - build a shared `quasar_schema` library;
 - link shared `protobuf`, shared `abseil`, and `mms::protocol`;
-- install generated headers under `include/quasar/schema`;
+- install generated headers under `include/quasar`;
 - install raw schema under `schema/quasar`;
 - expose the schema directory through `cpp_info.resdirs`.

@@ -79,7 +79,7 @@ The C++ package:
 
 - builds `quasar_schema` as a shared library;
 - links shared `protobuf`, shared `abseil`, and `mms::protocol`;
-- installs generated protobuf headers under `include/quasar/schema/*.pb.h`;
+- installs generated protobuf headers under `include/quasar/*.pb.h`;
 - installs raw schema files under `schema/quasar/*.proto`;
 - exposes the schema directory as a Conan resource directory.
 

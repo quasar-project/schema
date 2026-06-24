@@ -232,7 +232,7 @@ message SharedFormArgs {
   /// подпапке `images` с именем файла, совпадающим с именем файла голограммы.
   ///
   /// Ключ: `-O`, `--output`
-  string output = 23;
+  optional string output = 23;
 
   /// Формат/форматы выходного изображения, через запятую.
   ///
@@ -364,7 +364,7 @@ message VideoArgs {
   /// Путь к исполняемому файлу FFmpeg. Имеет приоритет над QUASAR_FFMPEG и встроенным FFmpeg
   ///
   /// Ключ: `--ffmpeg-path`
-  string ffmpeg_path = 9;
+  optional string ffmpeg_path = 9;
 
   /// Шаблон качества видеопотока
   ///
