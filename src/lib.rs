@@ -8,12 +8,16 @@ pub use quasar::pb::*;
 /// protobuf include paths and import files such as `quasar/route.proto`.
 pub const PROTO_INCLUDE_DIR: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/schema");
 
-/// XSchema protobuf files, relative to [`PROTO_INCLUDE_DIR`].
+/// QuaSAR Schema protobuf files, relative to [`PROTO_INCLUDE_DIR`].
 pub const PROTO_FILES: &[&str] = &[
+  "quasar/args.proto",
+  "quasar/error.proto",
+  "quasar/image.proto",
+  "quasar/nav.proto",
+  "quasar/route.proto",
+  "quasar/sar.proto",
+  "quasar/status.proto",
   "quasar/zmq.proto",
-  // "quasar/route.proto",
-  // "quasar/uav.proto",
-  // "quasar/discovery.proto",
 ];
 
 pub const PROTO_FILE_DESCRIPTOR_SET: &[u8] =

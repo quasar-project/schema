@@ -2,8 +2,11 @@ syntax = "proto3";
 
 package quasar.pb;
 
-enum Error {
+enum ErrorCode {
   ERROR_UNKNOWN = 0;
+}
 
-  // todo: extend with the proper error types
+message Error {
+  ErrorCode code = 1;
+  string details = 2;
 }

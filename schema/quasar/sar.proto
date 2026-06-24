@@ -7,7 +7,9 @@ import public "google/protobuf/empty.proto";
 import public "google/protobuf/duration.proto";
 
 import public "mms/uuid.proto";
+import public "mms/sockaddr.proto";
 
+import public "quasar/args.proto";
 import public "quasar/error.proto";
 import public "quasar/zmq.proto";
 
@@ -36,6 +38,31 @@ message Request {
     mms.pb.Uuid request_id = 1;
   }
 
+  message Tty {
+    mms.pb.SockaddrV4 address = 1;
+    bool force_color = 2;
+  }
+
+  message FormTelescopicRequest {
+    ControlArgs radar_args = 1;
+    FormTelescopicArgs dsp_args = 2;
+  }
+
+  message FormFocusedTelescopicRequest {
+    ControlArgs radar_args = 1;
+    AutofocusArgs dsp_args = 2;
+  }
+
+  message FormStripRequest {
+    ControlArgs radar_args = 1;
+    FormStripArgs dsp_args = 2;
+  }
+
+  message FormVideoRequest {
+    ControlArgs radar_args = 1;
+    VideoArgs dsp_args = 2;
+  }
+
   Header header = 1;
 
   oneof body {
@@ -46,9 +73,15 @@ message Request {
     google.protobuf.Empty poweroff = 6;
     google.protobuf.Empty reboot = 7;
 
-    // todo: form telescopic
-    // todo: form autofocus
-    // todo: form strip
+    Tty get_tty = 8;
+    Tty set_tty = 9;
+
+    FormTelescopicRequest form_telescopic_image = 10;
+    FormFocusedTelescopicRequest form_focused_telescopic_image = 11;
+    FormStripRequest begin_strip_image = 12;
+    google.protobuf.Empty end_strip_image = 13;
+    FormVideoRequest begin_video = 14;
+    google.protobuf.Empty end_video = 15;
   }
 }
 

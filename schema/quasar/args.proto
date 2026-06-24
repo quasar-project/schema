@@ -1,11 +1,10 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
 import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
 
-import public "mms/uuid.proto";
 import public "mms/dim.proto";
+import public "mms/sockaddr.proto";
 
 package quasar.pb;
 
@@ -24,8 +23,72 @@ enum ColorMap {
   Jet = 1;
 }
 
+enum StripBackProjectionMethod {
+  StripBackProjectionMethodExact = 0;
+  StripBackProjectionMethodFFBP = 1;
+}
+
+enum ImageFormatKind {
+  ImageFormatKindJPEG = 0;
+  ImageFormatKindPNG = 1;
+}
+
+enum VideoBackend {
+  VideoBackendAuto = 0;
+  VideoBackendFFmpeg = 1;
+  VideoBackendGStreamer = 2;
+}
+
+enum VideoCodec {
+  VideoCodecH265 = 0;
+  VideoCodecH264 = 1;
+}
+
+enum VideoQuality {
+  VideoQualityMedium = 0;
+  VideoQualityLow = 1;
+  VideoQualityHigh = 2;
+}
+
+enum CompressionPreset {
+  CompressionPresetUltraFast = 0;
+  CompressionPresetMedium = 1;
+  CompressionPresetSlow = 2;
+  CompressionPresetSlower = 3;
+}
+
+message ImageFormat {
+  /// Формат выходного изображения
+  ///
+  /// Ключ: `-F`, `--output-formats`, `--formats`
+  /// По умолчанию: JPEG
+  ImageFormatKind kind = 1;
+
+  /// Качество сжатия JPEG, 0-100
+  ///
+  /// Пример: `jpg:80`
+  /// По умолчанию: 80
+  google.protobuf.UInt32Value jpeg_quality = 2;
+}
+
+message ControlArgs {
+  /// Коэффициент усиления видео, 0-255
+  ///
+  /// Ключ: `--vg`, `--video-gain`
+  google.protobuf.UInt32Value video_gain = 1;
+
+  /// Отключение навигации
+  ///
+  /// Ключ: `--no-nav`
+  /// По умолчанию: false
+  bool no_nav = 2;
+}
+
 message SharedFormArgs {
   /// Входной файл голограммы
+  ///
+  /// По умолчанию: автоматически при записи сигнала.
+  /// Если строка не пуста, формирование сигнала не будет выполнено
   string input = 1;
 
   /// Тип вычислителя
@@ -163,6 +226,33 @@ message SharedFormArgs {
   /// Ключ: `-P`, `--plots`
   /// По умолчанию: false
   bool plots = 22;
+
+  /// Выходной файл. Указывается без расширения файла.
+  /// Если не задан, результат выполнения команды будет сохранен рядом с входным файлом голограммы в
+  /// подпапке `images` с именем файла, совпадающим с именем файла голограммы.
+  ///
+  /// Ключ: `-O`, `--output`
+  string output = 23;
+
+  /// Формат/форматы выходного изображения, через запятую.
+  ///
+  /// Для формата JPEG через двоеточие допускается указание качества сжатия JPEG.
+  /// Допускаются следующие значения: `jpg`, `png`
+  /// Примеры корректного списка форматов:
+  /// - jpg:80
+  /// - jpg:100,png
+  ///
+  /// Ключ: `-F`, `--output-formats`, `--formats`
+  /// По умолчанию: jpg:80
+  repeated ImageFormat output_formats = 24;
+
+  /// Сервер для фоновой передачи результата в формате IPv4:port.
+  ///
+  /// Ключ: `-r`, `--remote`
+  mms.pb.SockaddrV4 remote = 25;
+
+  /// Параметры управления аппаратной частью, общие для режимов формирования.
+  ControlArgs control = 26;
 }
 
 message FormTelescopicArgs {
@@ -189,6 +279,13 @@ message FormStripArgs {
   /// Ключ: `--velocity-multiplier`
   /// По умолчанию: 1.0
   google.protobuf.FloatValue velocity_multiplier = 3;
+
+  /// Метод обратной проекции для полосового режима.
+  ///
+  /// Допускаются следующие значения: `exact`, `ffbp`
+  /// Ключ: `--bp-method`
+  /// По умолчанию: Exact
+  StripBackProjectionMethod bp_method = 4;
 }
 
 message AutofocusArgs {
@@ -216,4 +313,84 @@ message AutofocusArgs {
   /// Ключ: `--keep-frames`
   /// По умолчанию: false
   bool keep_frames = 5;
+}
+
+message VideoArgs {
+  SharedFormArgs base = 1;
+
+  /// Угол расхождения луча диаграммы направленности в градусах
+  ///
+  /// Ключ: `--div`, `--divergence-angle`
+  /// По умолчанию: 20.0
+  google.protobuf.FloatValue divergence_angle = 2;
+
+  /// Частота кадров видеопотока
+  ///
+  /// Ключ: `--framerate`
+  /// По умолчанию: 60
+  google.protobuf.UInt32Value framerate = 3;
+
+  /// Длительность видеопотока. Если не задано, будет взята максимально возможная
+  /// продолжительность голограммы исходя из частоты оцифровки АЦП для текущего режима РЛС.
+  ///
+  /// Ключ: `--timespan`, `--duration`
+  google.protobuf.Duration timespan = 4;
+
+  /// Сохранение промежуточных кадров видеопотока для отладки
+  ///
+  /// Ключ: `--keep-frames`
+  /// По умолчанию: false
+  bool keep_frames = 5;
+
+  /// Бэкенд кодирования видеопотока
+  ///
+  /// Допускаются следующие значения: `auto`, `ffmpeg`, `gstreamer`
+  /// Ключ: `--video-backend`
+  /// По умолчанию: Auto
+  VideoBackend video_backend = 6;
+
+  /// Видеокодек
+  ///
+  /// Допускаются следующие значения: `h265`, `h264`
+  /// Ключ: `--video-codec`
+  /// По умолчанию: H265
+  VideoCodec video_codec = 7;
+
+  /// Битрейт видеокодировщика GStreamer, бит/с. По умолчанию: согласно шаблону качества
+  ///
+  /// Ключ: `--video-bitrate`
+  google.protobuf.UInt32Value video_bitrate = 8;
+
+  /// Путь к исполняемому файлу FFmpeg. Имеет приоритет над QUASAR_FFMPEG и встроенным FFmpeg
+  ///
+  /// Ключ: `--ffmpeg-path`
+  string ffmpeg_path = 9;
+
+  /// Шаблон качества видеопотока
+  ///
+  /// Допускаются следующие значения: `low`, `medium`, `high`
+  /// Ключ: `--quality`
+  /// По умолчанию: Medium
+  VideoQuality quality = 10;
+
+  /// Значение CRF для кодировщика видеопотока (0-51). По умолчанию: согласно шаблону качества
+  ///
+  /// Ключ: `--crf`
+  google.protobuf.UInt32Value crf = 11;
+
+  /// Тип компрессии видеопотока. По умолчанию: согласно шаблону качества
+  ///
+  /// Допускаются следующие значения: `ultrafast`, `medium`, `slow`, `slower`
+  /// Ключ: `--preset`
+  optional CompressionPreset preset = 12;
+
+  /// Шумоподавление. По умолчанию: согласно шаблону качества
+  ///
+  /// Ключ: `--denoise`
+  google.protobuf.BoolValue denoise = 13;
+
+  /// Не выполнять шумоподавление при рендеринге видеопотока. По умолчанию: согласно шаблону качества
+  ///
+  /// Ключ: `--no-denoise`
+  google.protobuf.BoolValue no_denoise = 14;
 }

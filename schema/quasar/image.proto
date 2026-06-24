@@ -1,8 +1,12 @@
 syntax = "proto3";
 
-import "google/protobuf/timestamp.proto";
-import "google/protobuf/duration.proto";
-import public "quasar/uuid.proto";
+import public "google/protobuf/timestamp.proto";
+import public "google/protobuf/duration.proto";
+
+import public "mms/angle.proto";
+import public "mms/distance.proto";
+import public "mms/velocity.proto";
+import public "mms/uuid.proto";
 
 package quasar.pb;
 
@@ -13,21 +17,21 @@ enum ImageType {
 
 message ImageMetadata {
   string filename = 30;
-  UUID uuid = 1;
+  mms.pb.Uuid uuid = 1;
   ImageType type = 2;
   double latitude = 3;
   double longitude = 4;
   float dx = 5;
   float dy = 6;
-  float x0 = 7;
-  float y0 = 8;
-  float lx = 9;
-  float ly = 10;
-  float azimuth = 11;
-  float drift_angle = 12;
-  float divergence_angle = 13;
-  float velocity = 14;
-  float altitude = 15;
+  mms.pb.Distance x0 = 7;
+  mms.pb.Distance y0 = 8;
+  mms.pb.Distance lx = 9;
+  mms.pb.Distance ly = 10;
+  mms.pb.Angle azimuth = 11;
+  mms.pb.Angle drift_angle = 12;
+  mms.pb.Angle divergence_angle = 13;
+  mms.pb.Velocity velocity = 14;
+  mms.pb.Distance altitude = 15;
   float fic = 16;
   google.protobuf.Duration time_offset = 17;
   google.protobuf.Duration time_duration = 18;
