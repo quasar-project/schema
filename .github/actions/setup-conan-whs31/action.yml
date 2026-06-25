@@ -1,0 +1,56 @@
+name: Setup Conan and whs31 remote
+description: Install Conan, configure GCC 14 profile, Ninja, download cache, and private Conan remote.
+
+runs:
+  using: composite
+  steps:
+    - name: Install compiler and build tools
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y ninja-build gcc-14 g++-14
+
+        {
+          echo "CC=gcc-14"
+          echo "CXX=g++-14"
+        } >> "$GITHUB_ENV"
+
+    - name: Install Conan
+      uses: conan-io/setup-conan@v1
+      with:
+        version: ${{ env.CONAN_VERSION }}
+        home: ${{ env.CONAN_HOME }}
+        profile_detect: false
+
+    - name: Configure Conan
+      shell: bash
+      run: |
+        mkdir -p "$CONAN_HOME/profiles"
+        mkdir -p "$CONAN_HOME/download_cache"
+
+        cat > "$CONAN_HOME/global.conf" <<EOF
+        core.download:download_cache=$CONAN_HOME/download_cache
+        EOF
+
+        cat > "$CONAN_HOME/profiles/default" <<EOF
+        [settings]
+        os=Linux
+        arch=x86_64
+        compiler=gcc
+        compiler.version=14
+        compiler.libcxx=libstdc++11
+        compiler.cppstd=20
+        build_type=${CONAN_BUILD_TYPE}
+
+        [conf]
+        tools.cmake.cmaketoolchain:generator=Ninja
+        EOF
+
+        conan remote remove "$CONAN_REMOTE_NAME" || true
+        conan remote add "$CONAN_REMOTE_NAME" "$CONAN_REMOTE_URL" --index=0
+
+        if [[ -n "${CONAN_LOGIN_USERNAME:-}" && -n "${CONAN_PASSWORD:-}" ]]; then
+          conan remote login "$CONAN_REMOTE_NAME" "$CONAN_LOGIN_USERNAME" -p "$CONAN_PASSWORD"
+        fi
+
+        conan profile show -pr:h default -pr:b default

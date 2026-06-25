@@ -3,158 +3,85 @@ name: CI/CD Pipeline
 on:
   push:
     branches: [ "main" ]
-    tags:
-      - '*'
+    tags: [ "*" ]
   pull_request:
     branches: [ "main" ]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
-  CARGO_REGISTRY_WHS31_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-  CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
-  CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
-  QT_VERSION: '6.11.*'
-  QT_CACHE_KEY: qt-6.11
+
+  QT_VERSION: "6.11.*"
+  QT_CACHE_KEY: "qt-6.11"
+
+  # Replace this with the actual Qt modules you use.
+  # Avoid "all" unless you really need the whole Qt crate pile.
+  QT_MODULES: "qtpositioning qtlocation qtserialport qtshadertools qtimageformats"
+
+  CONAN_VERSION: "2.29.0"
+  CONAN_HOME: ${{ github.workspace }}/.conan2
+  CONAN_REMOTE_NAME: whs31
+  CONAN_REMOTE_URL: https://af.whs31.com/artifactory/api/conan/quasar-conan
+  CONAN_BUILD_TYPE: Release
+
+  # Bump this when you intentionally want to invalidate all old Conan CI caches.
+  CONAN_CACHE_VERSION: v3
 
 jobs:
   build-rust:
-    runs-on: ubuntu-latest
+    name: Rust build
+    runs-on: ubuntu-24.04
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
+      - name: Setup Rust and Cargo registry
+        uses: ./.github/actions/setup-rust-whs31
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-
-      - name: Cache cargo registry
-        uses: actions/cache@v3
+      - name: Restore Cargo cache
+        id: cargo-cache
+        uses: actions/cache/restore@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
 
-      - name: Configure Cargo registry
-        run: |
-          mkdir -p ~/.cargo
-          cat > ~/.cargo/config.toml << EOF
-          [registry]
-          global-credential-providers = ["cargo:token"]
-          
-          [registries.whs31]
-          index = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-          EOF
+      - name: Fetch Rust dependencies
+        run: cargo fetch --locked
 
-      - name: Configure Cargo credentials
-        run: |
-          cat > ~/.cargo/credentials.toml << EOF
-          [registries.whs31]
-          token = "Bearer ${{ secrets.CARGO_REGISTRY_TOKEN }}"
-          EOF
-
-      - name: Build
-        run: cargo build --verbose
-
-  build-cxx:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          target: desktop
-          install-deps: true
-          modules: all
-          cache: true
-          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
-
-      - name: Setup Conan
-        uses: turtlebrowser/get-conan@main
-
-      - name: Cache Conan packages
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.conan2/p
-            ~/.conan2/download_cache
-          key: ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
-          restore-keys: |
-            ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-
-            ${{ runner.os }}-conan-
-
-      - name: Configure Conan
-        run: |
-          conan profile detect --force
-          sed -i '/compiler=/c\compiler=gcc' ~/.conan2/profiles/default
-          sed -i '/compiler.version=/c\compiler.version=14' ~/.conan2/profiles/default
-          sed -i '/compiler.libcxx=/c\compiler.libcxx=libstdc++11' ~/.conan2/profiles/default
-          sed -i '/compiler.cppstd=/c\compiler.cppstd=20' ~/.conan2/profiles/default
-          printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
-          
-          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan 
-          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
-
-      - name: Build with Conan
-        run: conan build . --build=missing
-
-      - name: Upload built dependencies
-        run: conan upload "*" -r whs31 -c || echo "Failed to upload dependencies"
-
-  publish:
-    if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-rust, build-cxx]
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install Protoc
-        uses: arduino/setup-protoc@v3
-
-      - name: Cache cargo registry
-        uses: actions/cache@v3
+      - name: Save Cargo cache
+        if: steps.cargo-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
         with:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-            target
-          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
-      - name: Configure Cargo for publishing
-        run: |
-          mkdir -p ~/.cargo
-          cat > ~/.cargo/config.toml << EOF
-          [registry]
-          global-credential-providers = ["cargo:token"]
-          
-          [registries.whs31]
-          index = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-          EOF
-          
-          cat > ~/.cargo/credentials.toml << EOF
-          [registries.whs31]
-          token = "Bearer ${{ secrets.CARGO_REGISTRY_TOKEN }}"
-          EOF
+      - name: Build Rust
+        run: cargo build --workspace --locked --verbose
 
-      - name: Build Release
-        run: cargo build --release
+  conan-deps:
+    name: Warm Conan dependencies
+    runs-on: ubuntu-24.04
 
-      - name: Publish to Cargo Registry
-        run: cargo publish --no-verify --registry whs31 || echo "Already published, skipping"
+    env:
+      CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
+      CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v4
@@ -162,37 +89,248 @@ jobs:
           version: ${{ env.QT_VERSION }}
           target: desktop
           install-deps: true
-          modules: all
+          modules: ${{ env.QT_MODULES }}
           cache: true
           cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
 
-      - name: Setup Conan for publishing
-        uses: turtlebrowser/get-conan@main
+      - name: Setup Conan
+        uses: ./.github/actions/setup-conan-whs31
 
-      - name: Cache Conan packages
-        uses: actions/cache@v3
+      - name: Restore Conan cache
+        id: conan-cache
+        uses: actions/cache/restore@v4
         with:
           path: |
-            ~/.conan2/p
-            ~/.conan2/download_cache
-          key: ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-${{ hashFiles('conanfile.py', 'CMakeLists.txt', 'schema/**/*.proto') }}
+            ${{ env.CONAN_HOME }}/p
+            ${{ env.CONAN_HOME }}/download_cache
+          key: >-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
+            }}
           restore-keys: |
-            ${{ runner.os }}-conan-${{ env.QT_CACHE_KEY }}-
-            ${{ runner.os }}-conan-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
 
-      - name: Configure Conan for publishing
+      - name: Install Conan dependencies
+        id: conan-install
+        continue-on-error: true
+        shell: bash
         run: |
-          conan profile detect --force
-          sed -i '/compiler=/c\compiler=gcc' ~/.conan2/profiles/default
-          sed -i '/compiler.version=/c\compiler.version=14' ~/.conan2/profiles/default
-          sed -i '/compiler.libcxx=/c\compiler.libcxx=libstdc++11' ~/.conan2/profiles/default
-          sed -i '/compiler.cppstd=/c\compiler.cppstd=20' ~/.conan2/profiles/default
-          printf '\n[conf]\ntools.cmake.cmaketoolchain:generator=Ninja\n' >> ~/.conan2/profiles/default
-          conan remote add whs31 https://af.whs31.com/artifactory/api/conan/quasar-conan || true
-          conan remote login whs31 "${{ secrets.CONAN_USERNAME }}" -p "${{ secrets.CONAN_PASSWORD }}"
+          set -o pipefail
+
+          lock_args=()
+          if [[ -f conan.lock ]]; then
+            lock_args+=(--lockfile=conan.lock --lockfile-partial)
+          fi
+
+          conan install . \
+            -of "build/${CONAN_BUILD_TYPE}" \
+            -pr:h default \
+            -pr:b default \
+            -s:h build_type="${CONAN_BUILD_TYPE}" \
+            -s:b build_type="${CONAN_BUILD_TYPE}" \
+            --build=missing \
+            "${lock_args[@]}"
+
+      # This is intentionally before the actual C++ build.
+      # Successful dependency packages should reach Artifactory even if your project build later fails.
+      - name: Upload built Conan dependencies
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        run: conan upload "*" -r "$CONAN_REMOTE_NAME" -c
+
+      - name: Save complete Conan cache
+        if: steps.conan-install.outcome == 'success' && steps.conan-cache.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.CONAN_HOME }}/p
+            ${{ env.CONAN_HOME }}/download_cache
+          key: ${{ steps.conan-cache.outputs.cache-primary-key }}
+
+      # Important: failed dependency builds are saved under a partial key, not the stable key.
+      # Otherwise you can poison the stable cache with an incomplete Conan cache.
+      - name: Save partial Conan cache after failed dependency install
+        if: steps.conan-install.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ${{ env.CONAN_HOME }}/p
+            ${{ env.CONAN_HOME }}/download_cache
+          key: >-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
+            }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Fail if Conan dependency install failed
+        if: steps.conan-install.outcome == 'failure'
+        run: exit 1
+
+  build-cxx:
+    name: C++ build
+    runs-on: ubuntu-24.04
+    needs: conan-deps
+
+    env:
+      CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
+      CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          install-deps: true
+          modules: ${{ env.QT_MODULES }}
+          cache: true
+          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
+
+      - name: Setup Conan
+        uses: ./.github/actions/setup-conan-whs31
+
+      - name: Restore Conan cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.CONAN_HOME }}/p
+            ${{ env.CONAN_HOME }}/download_cache
+          key: >-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
+            }}
+          restore-keys: |
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+
+      - name: Build with Conan
+        shell: bash
+        run: |
+          set -o pipefail
+
+          lock_args=()
+          if [[ -f conan.lock ]]; then
+            lock_args+=(--lockfile=conan.lock --lockfile-partial)
+          fi
+
+          conan build . \
+            -of "build/${CONAN_BUILD_TYPE}" \
+            -pr:h default \
+            -pr:b default \
+            -s:h build_type="${CONAN_BUILD_TYPE}" \
+            -s:b build_type="${CONAN_BUILD_TYPE}" \
+            --build=never \
+            "${lock_args[@]}"
+
+  publish-rust:
+    name: Publish Rust package
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-rust
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust and Cargo registry
+        uses: ./.github/actions/setup-rust-whs31
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Restore Cargo cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Publish to Cargo registry
+        shell: bash
+        run: |
+          set -o pipefail
+
+          cargo publish --no-verify --registry whs31 2>&1 | tee cargo-publish.log
+          status=${PIPESTATUS[0]}
+
+          if [[ "$status" -eq 0 ]]; then
+            exit 0
+          fi
+
+          if grep -Eiq 'already.*(uploaded|exists|published)' cargo-publish.log; then
+            echo "Package already exists in registry, skipping."
+            exit 0
+          fi
+
+          exit "$status"
+
+  publish-conan:
+    name: Publish Conan package
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build-cxx
+    runs-on: ubuntu-24.04
+
+    env:
+      CONAN_LOGIN_USERNAME: ${{ secrets.CONAN_USERNAME }}
+      CONAN_PASSWORD: ${{ secrets.CONAN_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          target: desktop
+          install-deps: true
+          modules: ${{ env.QT_MODULES }}
+          cache: true
+          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
+
+      - name: Setup Conan
+        uses: ./.github/actions/setup-conan-whs31
+
+      - name: Restore Conan cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ${{ env.CONAN_HOME }}/p
+            ${{ env.CONAN_HOME }}/download_cache
+          key: >-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
+            }}
+          restore-keys: |
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
 
       - name: Create Conan package
-        run: conan create . -b missing --user quasar --channel dev
+        shell: bash
+        run: |
+          set -o pipefail
 
-      - name: Upload to Conan registry
-        run: conan upload "quasar_schema/*" -r whs31 --force -c
+          lock_args=()
+          if [[ -f conan.lock ]]; then
+            lock_args+=(--lockfile=conan.lock --lockfile-partial)
+          fi
+
+          conan create . \
+            --user quasar \
+            --channel dev \
+            -pr:h default \
+            -pr:b default \
+            -s:h build_type="${CONAN_BUILD_TYPE}" \
+            -s:b build_type="${CONAN_BUILD_TYPE}" \
+            --build=missing \
+            "${lock_args[@]}"
+
+      - name: Upload Conan package
+        run: conan upload "quasar_schema/*" -r "$CONAN_REMOTE_NAME" --force -c

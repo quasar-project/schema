@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "quasar_schema"
-version = "1.0.0"
+version = "1.0.1"
 dependencies = [
  "mms_protocol",
  "prost",
