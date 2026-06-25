@@ -228,9 +228,9 @@ checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
 name = "mms_protocol"
-version = "3.0.1"
+version = "3.1.0"
 source = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-checksum = "3af54e6ab6e85b12ae31a48c03ab12b7637317a7169f29ed40122370a2f468e6"
+checksum = "27319c0ad4cd51f8309be6de01774af6b3a82239e6c6499dfa6c814e8443f42b"
 dependencies = [
  "mint",
  "prost",
