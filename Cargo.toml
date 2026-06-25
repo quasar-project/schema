@@ -1,6 +1,6 @@
 [package]
 name = "quasar_schema"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2024"
 authors = ["whs31 <whs31@github.io>"]
 keywords = ["protocol", "network", "uav", "protobuf"]

@@ -9,7 +9,7 @@ from conan.tools.files import rmdir
 
 class QuaSARSchemaRecipe(ConanFile):
     name = "quasar_schema"
-    version = "1.0.1"
+    version = "1.0.2"
     package_type = "shared-library"
     description = "QuaSAR Schema protobuf contract"
     author = "whs31 <whs31@github.io>"
@@ -18,6 +18,7 @@ class QuaSARSchemaRecipe(ConanFile):
     exports = "CMakeLists.txt"
     exports_sources = (
         "*",
+        "!.conan2/*",
         "!build/*",
         "!CMakeUserPresets.json",
         "!.git/*",
