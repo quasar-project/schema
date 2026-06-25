@@ -257,7 +257,7 @@ jobs:
         run: |
           set -o pipefail
 
-          cargo publish --no-verify --registry whs31 2>&1 | tee cargo-publish.log
+          cargo publish --no-verify --allow-dirty --registry whs31 2>&1 | tee cargo-publish.log
           status=${PIPESTATUS[0]}
 
           if [[ "$status" -eq 0 ]]; then
