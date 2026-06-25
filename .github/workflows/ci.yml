@@ -73,6 +73,7 @@ jobs:
           version: ${{ env.QT_VERSION }}
           target: desktop
           install-deps: true
+          modules: all
           cache: true
           cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
 
@@ -161,6 +162,7 @@ jobs:
           version: ${{ env.QT_VERSION }}
           target: desktop
           install-deps: true
+          modules: all
           cache: true
           cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
 
