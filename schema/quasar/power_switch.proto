@@ -1,0 +1,79 @@
+syntax = "proto3";
+
+package quasar.pb.power_switch;
+
+import public "google/protobuf/empty.proto";
+import public "google/protobuf/timestamp.proto";
+
+import public "mms/uuid.proto";
+
+import public "quasar/error.proto";
+import public "quasar/zmq.proto";
+
+enum LinkState {
+  LINK_STATE_UNKNOWN = 0;
+  LINK_STATE_CONNECTED = 1;
+  LINK_STATE_STALE = 2;
+  LINK_STATE_ERROR = 3;
+}
+
+message ChannelTelemetry {
+  // 0 is aggregate/input telemetry. 1..7 are controllable output channels.
+  uint32 channel = 1;
+  bool enabled = 2;
+  uint32 voltage_mv = 3;
+  uint32 current_ma = 4;
+}
+
+// Published by a Power Switch telemetry PUB socket.
+message Telemetry {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_PUB;
+  option (quasar.pb.zmq_flow) = "Power switch telemetry PUB -> subscribers";
+
+  repeated ChannelTelemetry channels = 1;
+  google.protobuf.Timestamp received_at = 2;
+  LinkState link_state = 3;
+  string status_message = 4;
+}
+
+// Sent by a ground/control DEALER socket to the Power Switch ROUTER socket.
+message Request {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_DEALER;
+  option (quasar.pb.zmq_flow) = "ground/control DEALER -> PowerSwitch ROUTER";
+
+  message Header {
+    mms.pb.Uuid request_id = 1;
+  }
+
+  message ToggleChannelRequest {
+    uint32 channel = 1;
+  }
+
+  message SetChannelEnabledRequest {
+    uint32 channel = 1;
+    bool enabled = 2;
+  }
+
+  Header header = 1;
+
+  oneof body {
+    google.protobuf.Empty get_snapshot = 2;
+    google.protobuf.Empty poll = 3;
+    ToggleChannelRequest toggle_channel = 4;
+    SetChannelEnabledRequest set_channel_enabled = 5;
+  }
+}
+
+// Sent by the Power Switch ROUTER socket in reply to Request.
+message Response {
+  option (quasar.pb.zmq_socket) = ZMQ_SOCKET_ROUTER;
+  option (quasar.pb.zmq_flow) = "PowerSwitch ROUTER -> ground/control DEALER";
+
+  Request.Header header = 1;
+
+  oneof body {
+    google.protobuf.Empty ok = 2;
+    .quasar.pb.Error error = 3;
+    Telemetry snapshot = 4;
+  }
+}

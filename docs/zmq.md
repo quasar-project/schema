@@ -18,6 +18,25 @@ Socket roles are documented twice:
 `Telemetry` carries the latest full navigation state. Subscribers should treat each
 message as a complete sample, not a delta.
 
+## Power Switch Telemetry
+
+| Direction          | Socket pattern | Message                            |
+|--------------------|----------------|------------------------------------|
+| SAR to subscribers | `PUB` -> `SUB` | `quasar.pb.power_switch.Telemetry` |
+
+`Telemetry` carries the latest full power switch channel state. Subscribers should treat
+each message as a complete sample, not a delta.
+
+## Power Switch Commands
+
+| Direction             | Socket pattern       | Message                           |
+|-----------------------|----------------------|-----------------------------------|
+| Ground/control to SAR | `DEALER` -> `ROUTER` | `quasar.pb.power_switch.Request`  |
+| SAR to ground/control | `ROUTER` -> `DEALER` | `quasar.pb.power_switch.Response` |
+
+`Request.Header.request_id` correlates responses with requests. `Response.header`
+repeats the original request header.
+
 ## SAR Commands
 
 | Direction             | Socket pattern       | Message                 |

@@ -5,6 +5,7 @@ const PROTO_FILES: &[&str] = &[
   "quasar/error.proto",
   "quasar/image.proto",
   "quasar/nav.proto",
+  "quasar/power_switch.proto",
   "quasar/route.proto",
   "quasar/sar.proto",
   "quasar/status.proto",

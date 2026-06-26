@@ -9,7 +9,7 @@ from conan.tools.files import rmdir
 
 class QuaSARSchemaRecipe(ConanFile):
     name = "quasar_schema"
-    version = "1.0.2"
+    version = "1.1.0"
     package_type = "shared-library"
     description = "QuaSAR Schema protobuf contract"
     author = "whs31 <whs31@github.io>"
