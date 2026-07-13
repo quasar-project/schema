@@ -252,7 +252,24 @@ message SharedFormArgs {
   mms.pb.SockaddrV4 remote = 25;
 
   /// Параметры управления аппаратной частью, общие для режимов формирования.
-  ControlArgs control = 26;
+  ///
+  /// Устаревшее поле. Используйте `radar_args` из соответствующего SAR-запроса.
+  ControlArgs control = 26 [deprecated = true];
+
+  /// Использовать значения по умолчанию текущей версии `quasar` для типа вычислителя
+  /// и метода расчёта угла сноса.
+  ///
+  /// Если `false`, для обратной совместимости используются `dsp_type` и
+  /// `drift_angle_method`. Если `true`, используются только явно заданные поля
+  /// `dsp_type_override` и `drift_angle_method_override`, а отсутствующие параметры
+  /// не передаются в `quasar`.
+  bool use_hardware_defaults = 27;
+
+  /// Явно заданный тип вычислителя при `use_hardware_defaults = true`.
+  optional DSPType dsp_type_override = 28;
+
+  /// Явно заданный метод расчёта угла сноса при `use_hardware_defaults = true`.
+  optional DriftAngleCalculationMethod drift_angle_method_override = 29;
 }
 
 message FormTelescopicArgs {

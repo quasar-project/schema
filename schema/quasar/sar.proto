@@ -32,7 +32,7 @@ message ExitStatus {
 // Sent by a ground/control DEALER socket to the SAR ROUTER socket.
 message Request {
   option (quasar.pb.zmq_socket) = ZMQ_SOCKET_DEALER;
-  option (quasar.pb.zmq_flow) = "ground/control DEALER -> Status ROUTER";
+  option (quasar.pb.zmq_flow) = "ground/control DEALER -> SAR ROUTER";
 
   message Header {
     mms.pb.Uuid request_id = 1;
@@ -44,21 +44,25 @@ message Request {
   }
 
   message FormTelescopicRequest {
+    // Canonical hardware-control arguments for this request.
     ControlArgs radar_args = 1;
     FormTelescopicArgs dsp_args = 2;
   }
 
   message FormFocusedTelescopicRequest {
+    // Canonical hardware-control arguments for this request.
     ControlArgs radar_args = 1;
     AutofocusArgs dsp_args = 2;
   }
 
   message FormStripRequest {
+    // Canonical hardware-control arguments for this request.
     ControlArgs radar_args = 1;
     FormStripArgs dsp_args = 2;
   }
 
   message FormVideoRequest {
+    // Canonical hardware-control arguments for this request.
     ControlArgs radar_args = 1;
     VideoArgs dsp_args = 2;
   }
@@ -82,13 +86,14 @@ message Request {
     google.protobuf.Empty end_strip_image = 13;
     FormVideoRequest begin_video = 14;
     google.protobuf.Empty end_video = 15;
+    google.protobuf.Empty abort_formation = 16;
   }
 }
 
 // Sent by the SAR ROUTER socket in reply to Request.
 message Response {
   option (quasar.pb.zmq_socket) = ZMQ_SOCKET_ROUTER;
-  option (quasar.pb.zmq_flow) = "Status ROUTER -> ground/control DEALER";
+  option (quasar.pb.zmq_flow) = "SAR ROUTER -> ground/control DEALER";
 
   Request.Header header = 1;
 
@@ -98,6 +103,6 @@ message Response {
     mms.pb.Uuid hardware_id = 4;
     BoardInfo board_info = 5;
     SystemInfo system_info = 6;
+    Request.Tty tty = 7;
   }
 }
-
