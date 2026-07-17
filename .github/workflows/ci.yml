@@ -17,13 +17,6 @@ permissions:
 env:
   CARGO_TERM_COLOR: always
 
-  QT_VERSION: "6.11.*"
-  QT_CACHE_KEY: "qt-6.11"
-
-  # Replace this with the actual Qt modules you use.
-  # Avoid "all" unless you really need the whole Qt crate pile.
-  QT_MODULES: "qtpositioning qtlocation qtserialport qtshadertools qtimageformats"
-
   CONAN_VERSION: "2.29.0"
   CONAN_HOME: ${{ github.workspace }}/.conan2
   CONAN_REMOTE_NAME: whs31
@@ -83,16 +76,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          target: desktop
-          install-deps: true
-          modules: ${{ env.QT_MODULES }}
-          cache: true
-          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
-
       - name: Setup Conan
         uses: ./.github/actions/setup-conan-whs31
 
@@ -104,13 +87,13 @@ jobs:
             ${{ env.CONAN_HOME }}/p
             ${{ env.CONAN_HOME }}/download_cache
           key: >-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{
             hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
             }}
           restore-keys: |
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
 
       - name: Install Conan dependencies
         id: conan-install
@@ -161,7 +144,7 @@ jobs:
             ${{ env.CONAN_HOME }}/p
             ${{ env.CONAN_HOME }}/download_cache
           key: >-
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{
             hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
             }}-${{ github.run_id }}-${{ github.run_attempt }}
 
@@ -181,16 +164,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          target: desktop
-          install-deps: true
-          modules: ${{ env.QT_MODULES }}
-          cache: true
-          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
-
       - name: Setup Conan
         uses: ./.github/actions/setup-conan-whs31
 
@@ -201,13 +174,13 @@ jobs:
             ${{ env.CONAN_HOME }}/p
             ${{ env.CONAN_HOME }}/download_cache
           key: >-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{
             hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
             }}
           restore-keys: |
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
 
       - name: Build with Conan
         shell: bash
@@ -283,17 +256,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
-        with:
-          version: ${{ env.QT_VERSION }}
-          target: desktop
-          install-deps: true
-          modules: ${{ env.QT_MODULES }}
-          cache: true
-          cache-key-prefix: ${{ runner.os }}-${{ env.QT_CACHE_KEY }}
-
+        
       - name: Setup Conan
         uses: ./.github/actions/setup-conan-whs31
 
@@ -304,13 +267,13 @@ jobs:
             ${{ env.CONAN_HOME }}/p
             ${{ env.CONAN_HOME }}/download_cache
           key: >-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{
             hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/action.yml')
             }}
           restore-keys: |
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
-            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
-            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-${{ env.QT_CACHE_KEY }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-${{ hashFiles('conanfile.py', 'conandata.yml', 'conan.lock', '.github/actions/setup-conan-whs31/setup-conan-whs31.yml') }}-
+            ${{ runner.os }}-conan-stable-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
+            ${{ runner.os }}-conan-partial-${{ env.CONAN_CACHE_VERSION }}-gcc14-cpp20-
 
       - name: Create Conan package
         shell: bash
