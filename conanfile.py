@@ -38,7 +38,7 @@ class QuaSARSchemaRecipe(ConanFile):
 
     def requirements(self):
         self.req(
-            "mms@radar/dev",
+            "mms_ipc_core@radar/dev",
             transitive_libs=True,
             transitive_headers=True,
         )
@@ -77,7 +77,7 @@ class QuaSARSchemaRecipe(ConanFile):
         tc = CMakeToolchain(self)
         tc.shared = True
 
-        mms_dep = self.dependencies["mms"]
+        mms_dep = self.dependencies["mms_ipc_core"]
         tc.variables["QUASAR_SCHEMA_MMS_PROTO_DIR"] = os.path.join(
             mms_dep.package_folder,
             "schema",
@@ -105,7 +105,7 @@ class QuaSARSchemaRecipe(ConanFile):
         )
         self.cpp_info.libs = ["quasar_schema"]
         self.cpp_info.requires = [
-            "mms::Protocol",
+            "mms_ipc_core::mms_ipc_core",
             "protobuf::protobuf",
             "abseil::abseil",
         ]

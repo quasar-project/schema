@@ -22,7 +22,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
   let mut b = prost_build::Config::new();
   b.include_file("_includes.rs");
   b.file_descriptor_set_path(out_dir.join("quasar_schema_descriptor.bin"));
-  b.extern_path(".mms.pb", "::mms_protocol");
+  b.extern_path(".mms.pb", "::mms_ipc_core");
   let attributes = if cfg!(feature = "serde") {
     Some(format!("#[derive({SERDE_DERIVES})] {SERDE_ATTRIBUTES}"))
   } else {
@@ -42,6 +42,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .iter()
     .map(|file| std::path::Path::new("schema").join(file))
     .collect::<Vec<_>>();
-  b.compile_protos(&proto_files, &["schema", mms_protocol::PROTO_INCLUDE_DIR])?;
+  b.compile_protos(&proto_files, &["schema", mms_ipc_core::PROTO_INCLUDE_DIR])?;
   Ok(())
 }

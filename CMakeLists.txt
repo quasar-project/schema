@@ -18,7 +18,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-find_package(MMS CONFIG REQUIRED)
+find_package(MMSIPCCore CONFIG REQUIRED)
 
 find_package(protobuf CONFIG QUIET)
 if(NOT TARGET protobuf::protobuf AND NOT TARGET protobuf::libprotobuf)
@@ -45,7 +45,7 @@ endif()
 
 set(QUASAR_SCHEMA_SCHEMA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/schema")
 set(QUASAR_SCHEMA_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
-set(QUASAR_SCHEMA_MMS_PROTO_DIR "" CACHE PATH "Path to the mms_protocol schema directory containing mms/*.proto")
+set(QUASAR_SCHEMA_Z_PROTO_DIR "" CACHE PATH "Path to the mms_ipc_core schema directory containing mms/*.proto")
 
 if(NOT QUASAR_SCHEMA_MMS_PROTO_DIR)
   set(_quasar_schema_local_mms_schema "${CMAKE_CURRENT_SOURCE_DIR}/../mms/protocol/schema")
@@ -55,7 +55,7 @@ if(NOT QUASAR_SCHEMA_MMS_PROTO_DIR)
 endif()
 
 if(NOT IS_DIRECTORY "${QUASAR_SCHEMA_MMS_PROTO_DIR}/mms")
-  message(FATAL_ERROR "QUASAR_SCHEMA_MMS_PROTO_DIR must point to the mms_protocol schema directory containing mms/*.proto")
+  message(FATAL_ERROR "QUASAR_SCHEMA_MMS_PROTO_DIR must point to the mms_ipc_core schema directory containing mms/*.proto")
 endif()
 
 file(GLOB_RECURSE QUASAR_SCHEMA_PROTO_FILES CONFIGURE_DEPENDS
@@ -131,7 +131,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
-    mms::protocol
+    mms::ipc_core
     ${QUASAR_SCHEMA_PROTOBUF_TARGET}
 )
 

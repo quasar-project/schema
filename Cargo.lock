@@ -227,10 +227,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
-name = "mms_protocol"
+name = "mms_ipc_core"
 version = "3.1.0"
 source = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-checksum = "27319c0ad4cd51f8309be6de01774af6b3a82239e6c6499dfa6c814e8443f42b"
+checksum = "04f68ba6cfa78fd7cd0f6e43180a968d12d3936c6d9bfc6a9b1a60b6bb2b4e83"
 dependencies = [
  "mint",
  "prost",
@@ -364,7 +364,7 @@ dependencies = [
 name = "quasar_schema"
 version = "1.2.0"
 dependencies = [
- "mms_protocol",
+ "mms_ipc_core",
  "prost",
  "prost-build",
  "prost-types",

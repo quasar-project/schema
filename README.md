@@ -19,7 +19,7 @@ descriptor options from `quasar/zmq.proto`.
 ## Schema Layout
 
 All schema files use `syntax = "proto3"`.
-Shared domain types come from `mms_protocol` / `mms::protocol`:
+Shared domain types come from `mms_ipc_core` / `mms::ipc_core`:
 - `mms.pb.Uuid`
 - `mms.pb.LatLon`
 - `mms.pb.Dim3`
@@ -46,12 +46,12 @@ quasar_schema = { registry = "whs31", version = "1", features = ["vendored-proto
 
 Feature flags:
 
-| Feature | Effect |
-| --- | --- |
-| `serde` | Adds serde derives to generated messages/enums and enables `mms_protocol/serde` |
-| `legacy` | Passes `--experimental_allow_proto3_optional` to `protoc` |
-| `wkt` | Generates local Rust code for Google well-known types |
-| `vendored-protobuf` | Uses the `protobuf-src` crate to provide `protoc` |
+| Feature | Effect                                                                          |
+| --- |---------------------------------------------------------------------------------|
+| `serde` | Adds serde derives to generated messages/enums and enables `mms_ipc_core/serde` |
+| `legacy` | Passes `--experimental_allow_proto3_optional` to `protoc`                       |
+| `wkt` | Generates local Rust code for Google well-known types                           |
+| `vendored-protobuf` | Uses the `protobuf-src` crate to provide `protoc`                               |
 
 Rust re-exports generated modules from `quasar.pb`.
 

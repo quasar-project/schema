@@ -1,6 +1,6 @@
 include!(concat!(env!("OUT_DIR"), "/_includes.rs"));
 
-pub use mms_protocol::mms::pb::*;
+pub use mms_ipc_core::mms::pb::*;
 pub use quasar::pb::*;
 
 /// Include path containing the QuaSAR Schema `.proto` files.

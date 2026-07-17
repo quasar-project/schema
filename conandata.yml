@@ -1,5 +1,5 @@
 requirements:
-  mms: "[>=3.0.10]"
+  mms_ipc_core: "[>=3.1]"
   protobuf: "6.33.5"
   abseil: "20260107.1"
 

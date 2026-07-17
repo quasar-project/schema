@@ -34,7 +34,7 @@ The schema is the source of truth. Generated C++ files and Rust files are build
 artifacts and must not be committed.
 
 ## Schema files
-Use `mms_protocol` / `mms::protocol` for shared domain-specific protobuf types
+Use `mms_ipc_core` / `mms::ipc_core` for shared domain-specific protobuf types
 such as `Uuid`, `LatLon`, `Dim3`, `EulerAngles`, `Sockaddr`, and `Version`.
 Use Google well-known protobuf types for timestamps, durations, and empty
 payloads.

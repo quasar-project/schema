@@ -11,14 +11,14 @@ doctest = false
 
 [features]
 default = []
-serde = ["dep:serde", "wkt", "mms_protocol/serde"]
-legacy = ["mms_protocol/legacy"]
+serde = ["dep:serde", "wkt", "mms_ipc_core/serde"]
+legacy = ["mms_ipc_core/legacy"]
 wkt = []
-vendored-protobuf = ["dep:protobuf-src", "mms_protocol/vendored-protobuf"]
+vendored-protobuf = ["dep:protobuf-src", "mms_ipc_core/vendored-protobuf"]
 
 
 [dependencies]
-mms_protocol = { version = "3.0.10", registry = "whs31" }
+mms_ipc_core = { version = "3.1.0", registry = "whs31" }
 
 prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }
@@ -28,4 +28,4 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [build-dependencies]
 prost-build = "0.14"
 protobuf-src = { version = "2", optional = true }
-mms_protocol = { version = "3.0.1", registry = "whs31" }
+mms_ipc_core = { version = "3.1", registry = "whs31" }
