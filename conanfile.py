@@ -9,7 +9,7 @@ from conan.tools.files import rmdir
 
 class QuaSARSchemaRecipe(ConanFile):
     name = "quasar_schema"
-    version = "1.4.0"
+    version = "1.5.0"
     package_type = "shared-library"
     description = "QuaSAR Schema protobuf contract"
     author = "whs31 <whs31@github.io>"
@@ -24,6 +24,8 @@ class QuaSARSchemaRecipe(ConanFile):
         "!.git/*",
         "!.idea/*",
         "!target/*",
+        "!test_package/build/*",
+        "!test_package/CMakeUserPresets.json",
     )
 
     user = "quasar"
@@ -91,6 +93,10 @@ class QuaSARSchemaRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if not self.conf.get(
+            "tools.build:skip_test", default=False, check_type=bool
+        ):
+            cmake.test()
 
     def package(self):
         cmake = CMake(self)
@@ -100,13 +106,20 @@ class QuaSARSchemaRecipe(ConanFile):
 
     def package_info(self):
         self.cpp_info.set_property("cmake_file_name", "QuaSARSchema")
-        self.cpp_info.set_property(
-            "cmake_target_name", "quasar::schema"
-        )
-        self.cpp_info.libs = ["quasar_schema"]
-        self.cpp_info.requires = [
+
+        ffi = self.cpp_info.components["ffi"]
+        ffi.set_property("cmake_target_name", "quasar::schema_ffi")
+        ffi.includedirs = ["include"]
+        ffi.libdirs = []
+        ffi.bindirs = []
+
+        schema = self.cpp_info.components["schema"]
+        schema.set_property("cmake_target_name", "quasar::schema")
+        schema.libs = ["quasar_schema"]
+        schema.requires = [
+            "ffi",
             "mms_ipc_core::mms_ipc_core",
             "protobuf::protobuf",
             "abseil::abseil",
         ]
-        self.cpp_info.resdirs = ["schema"]
+        schema.resdirs = ["schema"]

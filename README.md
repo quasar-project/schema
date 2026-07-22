@@ -12,6 +12,9 @@ The project is published as:
 - a Rust crate named `quasar_schema`;
 - a C++ Conan package named `quasar_schema`, exported as a shared library.
 
+It also provides a fixed-layout C-compatible translation of navigation
+telemetry for FPGA consumers. See [docs/raw-nav.md](docs/raw-nav.md).
+
 The schema intentionally does not define ZeroMQ endpoints, topics, or runtime
 configuration. It documents socket roles and data flow in comments and through
 descriptor options from `quasar/zmq.proto`.
@@ -74,6 +77,16 @@ def requirements(self):
 find_package(QuaSARSchema REQUIRED)
 target_link_libraries(my_target PRIVATE quasar::schema)
 ```
+
+Raw navigation telemetry is available independently as a header-only target:
+
+```cmake
+find_package(QuaSARSchema REQUIRED)
+target_link_libraries(fpga_bridge PRIVATE quasar::schema_ffi)
+```
+
+Include it with `#include <quasar/ffi/nav.h>`. The equivalent Rust type is
+`quasar_schema::raw::nav::Telemetry`.
 
 The C++ package:
 

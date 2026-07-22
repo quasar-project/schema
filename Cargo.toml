@@ -1,6 +1,6 @@
 [package]
 name = "quasar_schema"
-version = "1.4.0"
+version = "1.5.0"
 edition = "2024"
 authors = ["whs31 <whs31@github.io>"]
 keywords = ["protocol", "network", "uav", "protobuf"]
@@ -18,6 +18,7 @@ vendored-protobuf = ["dep:protobuf-src", "mms_ipc_core/vendored-protobuf"]
 
 
 [dependencies]
+bytemuck = { version = "1.24", features = ["derive"] }
 mms_ipc_core = { version = "3.1.0", registry = "whs31" }
 
 prost = { version = "0.14", features = ["default"] }

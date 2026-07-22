@@ -1,5 +1,7 @@
 include!(concat!(env!("OUT_DIR"), "/_includes.rs"));
 
+pub mod raw;
+
 pub use mms_ipc_core::mms::pb::*;
 pub use quasar::pb::*;
 

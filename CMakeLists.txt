@@ -10,6 +10,23 @@ project(quasar_schema
 set(PROJECT_NAMESPACE "quasar::")
 set(PROJECT_FULL_NAME "${PROJECT_NAMESPACE}${PROJECT_NAME}")
 
+add_library(${PROJECT_NAME}_ffi INTERFACE)
+add_library(${PROJECT_NAMESPACE}schema_ffi ALIAS ${PROJECT_NAME}_ffi)
+set_target_properties(${PROJECT_NAME}_ffi PROPERTIES EXPORT_NAME schema_ffi)
+
+target_sources(${PROJECT_NAME}_ffi
+  INTERFACE
+    FILE_SET HEADERS
+    BASE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    FILES "${CMAKE_CURRENT_SOURCE_DIR}/include/quasar/ffi/nav.h"
+)
+
+target_include_directories(${PROJECT_NAME}_ffi
+  INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+
 if("${CMAKE_GENERATOR}" MATCHES "^Visual Studio")
   set(CMAKE_GENERATOR_PLATFORM "x64" CACHE STRING "" FORCE)
 endif()
@@ -131,6 +148,7 @@ endif()
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
+    ${PROJECT_NAME}_ffi
     mms::ipc_core
     ${QUASAR_SCHEMA_PROTOBUF_TARGET}
 )
@@ -156,6 +174,12 @@ install(
 )
 
 install(
+  TARGETS ${PROJECT_NAME}_ffi
+  EXPORT ${PROJECT_NAME}
+  FILE_SET HEADERS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
   DIRECTORY "${QUASAR_SCHEMA_SCHEMA_DIR}/"
   DESTINATION schema
   FILES_MATCHING PATTERN "*.proto"
@@ -166,3 +190,16 @@ install(EXPORT ${PROJECT_NAME}
   NAMESPACE quasar::
   DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(${PROJECT_NAME}_ffi_c_layout tests/ffi/nav_layout.c)
+  target_link_libraries(${PROJECT_NAME}_ffi_c_layout PRIVATE ${PROJECT_NAME}_ffi)
+  set_target_properties(${PROJECT_NAME}_ffi_c_layout PROPERTIES C_STANDARD 11)
+  add_test(NAME ${PROJECT_NAME}_ffi_c_layout COMMAND ${PROJECT_NAME}_ffi_c_layout)
+
+  add_executable(${PROJECT_NAME}_ffi_cxx_layout tests/ffi/nav_layout.cpp)
+  target_link_libraries(${PROJECT_NAME}_ffi_cxx_layout PRIVATE ${PROJECT_NAME}_ffi)
+  set_target_properties(${PROJECT_NAME}_ffi_cxx_layout PROPERTIES CXX_STANDARD 20)
+  add_test(NAME ${PROJECT_NAME}_ffi_cxx_layout COMMAND ${PROJECT_NAME}_ffi_cxx_layout)
+endif()
