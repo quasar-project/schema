@@ -362,7 +362,7 @@ dependencies = [
 
 [[package]]
 name = "quasar_schema"
-version = "1.3.0"
+version = "1.4.0"
 dependencies = [
  "mms_ipc_core",
  "prost",

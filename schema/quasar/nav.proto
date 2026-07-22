@@ -45,7 +45,8 @@ message Telemetry {
   mms.pb.LatLon coordinate = 1;
   mms.pb.Distance altitude = 2;
   mms.pb.Distance altitude_barometric = 15;
-  mms.pb.Velocity velocity_course = 3;
+  mms.pb.Velocity velocity_longitudinal = 3; // former velocity_course
+  mms.pb.Velocity velocity_lateral = 17;
   mms.pb.Velocity velocity_vertical = 4;
   mms.pb.Dim3 gyroscope = 5;
   mms.pb.Dim3 accelerometer = 6;
