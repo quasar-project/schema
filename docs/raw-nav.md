@@ -4,11 +4,39 @@ The raw navigation protocol is a fixed-layout alternative to
 `quasar.pb.nav.Telemetry` for FPGA and Verilog consumers that cannot implement
 protobuf. It exposes only navigation telemetry and its two enum-like fields.
 
-The payload is exactly 120 bytes. It uses little-endian integers and IEEE-754
-binary32/binary64 floating-point values, with no padding, framing, magic,
-version, presence bitmap, or checksum. Every field is mandatory.
+The transport unit is a 136-byte version 1 QNAV frame. It contains a 12-byte
+header, the existing 120-byte telemetry payload, and a 4-byte CRC-32C. All
+multibyte values are little-endian. Floating-point values use IEEE-754
+binary32/binary64 encoding.
 
-## Layout
+## Frame layout
+
+| Offset | Size | Field | Value or meaning |
+| ---: | ---: | --- | --- |
+| 0 | 4 | `magic` | `0x56414E51`; wire bytes `QNAV` |
+| 4 | 1 | `version` | `1` |
+| 5 | 1 | `message_type` | `1`, navigation telemetry |
+| 6 | 2 | `payload_length` | `120` |
+| 8 | 4 | `sequence` | Caller-provided `uint32_t`; wraps naturally |
+| 12 | 120 | `payload` | Raw telemetry described below |
+| 132 | 4 | `crc32c` | CRC-32C of bytes `[0, 132)` |
+
+CRC parameters are:
+
+- CRC-32C/Castagnoli;
+- normal polynomial `0x1EDC6F41`, reflected polynomial `0x82F63B78`;
+- initial value `0xFFFFFFFF`;
+- reflected input and reflected output;
+- final XOR `0xFFFFFFFF`.
+
+The standard check input `123456789` produces `0xE3069283`. The CRC field is
+not included in its own calculation.
+
+## Telemetry payload layout
+
+Payload offsets below are relative to byte 12 of the frame. The payload remains
+available as an independent low-level representation, but it must not be
+written repeatedly to a TTY or other unframed byte stream.
 
 | Offset | C field | Type | Unit or meaning |
 | ---: | --- | --- | --- |
@@ -53,27 +81,60 @@ target_link_libraries(fpga_bridge PRIVATE quasar::schema_ffi)
 
 ```c
 #include <quasar/ffi/nav.h>
+#include <string.h>
 
 quasar_ffi_nav_telemetry_t telemetry = {0};
+quasar_ffi_nav_telemetry_frame_v1_t frame = {0};
+
+frame.header.magic = QUASAR_FFI_NAV_FRAME_MAGIC;
+frame.header.version = QUASAR_FFI_NAV_FRAME_VERSION;
+frame.header.message_type = QUASAR_FFI_NAV_FRAME_MESSAGE_TYPE_TELEMETRY;
+frame.header.payload_length = QUASAR_FFI_NAV_FRAME_PAYLOAD_SIZE;
+frame.header.sequence = sequence;
+memcpy(frame.payload, &telemetry, sizeof(telemetry));
+frame.crc32c = application_crc32c((const uint8_t *)&frame, 132);
+write_all(serial_fd, (const uint8_t *)&frame, sizeof(frame));
 ```
 
 The header-only target does not link the protobuf library. The header rejects
-known big-endian and non-IEEE-754 targets at compile time.
+known big-endian and non-IEEE-754 targets at compile time. The C header defines
+the layout and constants but deliberately does not provide CRC or I/O routines.
 
 ## Rust
 
 ```rust
-use quasar_schema::raw::nav::Telemetry;
+use quasar_schema::raw::nav::NavTelemetryFrameV1;
 
-let raw = Telemetry::try_from(&protobuf_telemetry)?;
-let bytes = raw.to_le_bytes();
-let decoded = Telemetry::from_le_bytes(&bytes)?;
-let protobuf = quasar_schema::nav::Telemetry::try_from(decoded)?;
+let frame = NavTelemetryFrameV1::try_from_protobuf(sequence, &protobuf_telemetry)?;
+let bytes = frame.to_le_bytes();
+serial.write_all(&bytes)?;
+
+let decoded = NavTelemetryFrameV1::from_le_bytes(&bytes)?;
+let telemetry = decoded.telemetry()?;
+let protobuf = quasar_schema::nav::Telemetry::try_from(telemetry)?;
 ```
 
 Conversions reject absent protobuf submessages, unknown enum discriminants,
-timestamps outside the protobuf range, invalid nanoseconds, and payloads whose
-length is not exactly 120 bytes. Floating-point bit patterns are preserved.
+timestamps outside the protobuf range, and invalid nanoseconds. Frame decoding
+also rejects an incorrect total length, header metadata, payload length, CRC, or
+structurally invalid telemetry. Floating-point bit patterns are preserved.
 
-This protocol is unversioned. Its size, offsets, types, and enum values are a
-stable ABI; incompatible changes require a new raw protocol type.
+`Telemetry::to_le_bytes` and `Telemetry::from_le_bytes` remain available for
+low-level payload handling. They do not add or validate a QNAV header or CRC.
+
+## TTY receive procedure
+
+TTY buffering and resynchronization belong to the receiver, not this library:
+
+1. Scan for the four wire bytes `QNAV` (`51 4e 41 56` hexadecimal).
+2. Starting at that candidate, buffer exactly 136 bytes.
+3. Validate the header fields, CRC, and telemetry payload.
+4. If validation succeeds, consume the complete frame. If it fails, resume the
+   magic scan one byte after the beginning of the failed candidate.
+
+This library intentionally provides no stream decoder. One short read is not a
+frame, and one read may contain several frames.
+
+The QNAV version, frame size, offsets, payload types, and enum values are a
+stable ABI. Incompatible changes require a new frame/payload version rather
+than changing version 1 in place.

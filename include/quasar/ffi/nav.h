@@ -56,6 +56,12 @@ enum {
 };
 
 #define QUASAR_FFI_NAV_TELEMETRY_SIZE ((size_t)120)
+#define QUASAR_FFI_NAV_FRAME_MAGIC UINT32_C(0x56414E51)
+#define QUASAR_FFI_NAV_FRAME_VERSION UINT8_C(1)
+#define QUASAR_FFI_NAV_FRAME_MESSAGE_TYPE_TELEMETRY UINT8_C(1)
+#define QUASAR_FFI_NAV_FRAME_HEADER_SIZE ((size_t)12)
+#define QUASAR_FFI_NAV_FRAME_PAYLOAD_SIZE QUASAR_FFI_NAV_TELEMETRY_SIZE
+#define QUASAR_FFI_NAV_TELEMETRY_FRAME_V1_SIZE ((size_t)136)
 
 #if defined(_MSC_VER)
 #  pragma pack(push, 1)
@@ -69,9 +75,11 @@ enum {
 /**
  * Fixed-layout, little-endian translation of quasar.pb.nav.Telemetry.
  *
- * Every value is mandatory. This payload has no framing, version, presence
- * mask, or checksum. Copy unaligned input bytes into a suitably declared
- * instance before accessing fields on platforms that restrict unaligned loads.
+ * Every value is mandatory. This low-level payload has no framing, version,
+ * presence mask, or checksum; stream transports should carry it inside
+ * quasar_ffi_nav_telemetry_frame_v1_t. Copy unaligned input bytes into a
+ * suitably declared instance before accessing fields on platforms that
+ * restrict unaligned loads.
  */
 typedef struct QUASAR_FFI_PACKED quasar_ffi_nav_telemetry {
   double coordinate_latitude;
@@ -102,6 +110,26 @@ typedef struct QUASAR_FFI_PACKED quasar_ffi_nav_telemetry {
   quasar_ffi_nav_navigation_source_t navigation_source;
   quasar_ffi_nav_gps_fix_t fix;
 } quasar_ffi_nav_telemetry_t;
+
+/** Version 1 QNAV frame header. All multibyte fields are little-endian. */
+typedef struct QUASAR_FFI_PACKED quasar_ffi_nav_frame_header {
+  uint32_t magic;
+  uint8_t version;
+  uint8_t message_type;
+  uint16_t payload_length;
+  uint32_t sequence;
+} quasar_ffi_nav_frame_header_t;
+
+/**
+ * Version 1 QNAV navigation telemetry frame.
+ *
+ * crc32c covers header and payload bytes [0, 132), excluding the CRC field.
+ */
+typedef struct QUASAR_FFI_PACKED quasar_ffi_nav_telemetry_frame_v1 {
+  quasar_ffi_nav_frame_header_t header;
+  uint8_t payload[QUASAR_FFI_NAV_FRAME_PAYLOAD_SIZE];
+  uint32_t crc32c;
+} quasar_ffi_nav_telemetry_frame_v1_t;
 
 #if defined(_MSC_VER)
 #  pragma pack(pop)
@@ -218,6 +246,48 @@ QUASAR_FFI_STATIC_ASSERT(
   "invalid navigation_source offset"
 );
 QUASAR_FFI_STATIC_ASSERT(offsetof(quasar_ffi_nav_telemetry_t, fix) == 116, "invalid fix offset");
+
+QUASAR_FFI_STATIC_ASSERT(
+  sizeof(quasar_ffi_nav_frame_header_t) == QUASAR_FFI_NAV_FRAME_HEADER_SIZE,
+  "quasar nav frame header must be 12 bytes"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_frame_header_t, magic) == 0,
+  "invalid frame magic offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_frame_header_t, version) == 4,
+  "invalid frame version offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_frame_header_t, message_type) == 5,
+  "invalid frame message_type offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_frame_header_t, payload_length) == 6,
+  "invalid frame payload_length offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_frame_header_t, sequence) == 8,
+  "invalid frame sequence offset"
+);
+
+QUASAR_FFI_STATIC_ASSERT(
+  sizeof(quasar_ffi_nav_telemetry_frame_v1_t) == QUASAR_FFI_NAV_TELEMETRY_FRAME_V1_SIZE,
+  "quasar nav telemetry frame v1 must be 136 bytes"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_telemetry_frame_v1_t, header) == 0,
+  "invalid telemetry frame header offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_telemetry_frame_v1_t, payload) == 12,
+  "invalid telemetry frame payload offset"
+);
+QUASAR_FFI_STATIC_ASSERT(
+  offsetof(quasar_ffi_nav_telemetry_frame_v1_t, crc32c) == 132,
+  "invalid telemetry frame crc32c offset"
+);
 
 #undef QUASAR_FFI_STATIC_ASSERT
 
