@@ -37,14 +37,14 @@ See [docs/zmq.md](docs/zmq.md) for socket roles and message flow.
 
 ```toml
 [dependencies]
-quasar_schema = { registry = "whs31", version = "1" }
+quasar_schema = { registry = "whs31", version = "2" }
 ```
 
 The crate uses `prost` and requires `protoc` at build time unless the
 `vendored-protobuf` feature is enabled:
 
 ```toml
-quasar_schema = { registry = "whs31", version = "1", features = ["vendored-protobuf"] }
+quasar_schema = { registry = "whs31", version = "2", features = ["vendored-protobuf"] }
 ```
 
 Feature flags:
@@ -70,7 +70,7 @@ use quasar_schema::{PROTO_FILES, PROTO_INCLUDE_DIR};
 
 ```python
 def requirements(self):
-    self.requires("quasar_schema/1.0.0@quasar/dev")
+    self.requires("quasar_schema/2.0.0@quasar/dev")
 ```
 
 ```cmake

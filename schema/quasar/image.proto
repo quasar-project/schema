@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/duration.proto";
 
 import public "mms/angle.proto";
+import public "mms/dim.proto";
 import public "mms/distance.proto";
+import public "mms/latlon.proto";
 import public "mms/velocity.proto";
-import public "mms/uuid.proto";
 
 package quasar.pb;
 
@@ -15,29 +15,45 @@ enum ImageType {
   IMAGE_TYPE_STRIP = 1;
 }
 
+enum RadarRampType {
+  RADAR_RAMP_TYPE_UNSPECIFIED = 0;
+  RADAR_RAMP_TYPE_SAW = 1;
+  RADAR_RAMP_TYPE_TRIANGULAR = 2;
+}
+
+message RadarSignalParameters {
+  uint32 capture_mode = 1;
+  uint32 sampling_frequency_hz = 2;
+  uint32 period_sample_count = 3;
+  uint32 sync_pause_sample_count = 4;
+  uint64 initial_frequency_hz = 5;
+  uint32 bandwidth_hz = 6;
+  uint32 modulation_duration_ns = 7;
+  RadarRampType ramp_type = 8;
+}
+
 message ImageMetadata {
-  string filename = 30;
-  mms.pb.Uuid uuid = 1;
-  ImageType type = 2;
-  double latitude = 3;
-  double longitude = 4;
-  float dx = 5;
-  float dy = 6;
-  mms.pb.Distance x0 = 7;
-  mms.pb.Distance y0 = 8;
-  mms.pb.Distance lx = 9;
-  mms.pb.Distance ly = 10;
-  mms.pb.Angle azimuth = 11;
+  reserved 1, 3, 4, 5, 6, 9, 10, 19, 21, 30;
+  reserved "filename", "uuid", "type", "latitude", "longitude", "dx", "dy", "x0", "y0", "lx", "ly", "azimuth",
+    "fic", "timestamp", "sar_mode", "valid_checksum";
+
+  ImageType image_type = 2;
+  mms.pb.Distance near_edge = 7;
+  mms.pb.Distance frame_offset = 8;
+  mms.pb.Angle angle = 11;
   mms.pb.Angle drift_angle = 12;
   mms.pb.Angle divergence_angle = 13;
   mms.pb.Velocity velocity = 14;
   mms.pb.Distance altitude = 15;
-  float fic = 16;
+  float frequency_interpolation_coefficient = 16;
   google.protobuf.Duration time_offset = 17;
   google.protobuf.Duration time_duration = 18;
-  google.protobuf.Timestamp timestamp = 19;
-  int32 sar_mode = 20;
-  bool valid_checksum = 21;
+  uint32 mode = 20;
+  mms.pb.LatLon coordinate = 22;
+  mms.pb.Dim2 pixel_size = 23;
+  mms.pb.Dim2 size = 24;
+  optional RadarSignalParameters radar = 25;
+  optional uint32 crc = 26;
 }
 
 message Image {
