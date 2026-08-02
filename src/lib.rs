@@ -30,6 +30,11 @@ pub const PROTO_FILE_DESCRIPTOR_SET: &[u8] =
 #[cfg(test)]
 mod tests {
   use super::*;
+  #[cfg(feature = "wkt")]
+  use crate::google::protobuf::Duration;
+  use prost::Message;
+  #[cfg(not(feature = "wkt"))]
+  use prost_types::Duration;
 
   #[test]
   fn exposes_proto_files_for_downstream_schema_builds() {
@@ -56,13 +61,17 @@ mod tests {
       velocity: Some(Velocity { mps: 12.5 }),
       altitude: Some(Distance { meters: 210.0 }),
       frequency_interpolation_coefficient: 1.0,
-      time_offset: Some(prost_types::Duration {
-        seconds: 0,
-        nanos: 750_000_000,
+      time_offset: Some({
+        let mut duration = Duration::default();
+        duration.seconds = 0;
+        duration.nanos = 750_000_000;
+        duration
       }),
-      time_duration: Some(prost_types::Duration {
-        seconds: 0,
-        nanos: 500_000_000,
+      time_duration: Some({
+        let mut duration = Duration::default();
+        duration.seconds = 0;
+        duration.nanos = 500_000_000;
+        duration
       }),
       mode: 1,
       coordinate: Some(LatLon {
@@ -95,6 +104,6 @@ mod tests {
     let decoded = Image::decode(encoded.as_slice()).expect("image protobuf must decode");
 
     assert_eq!(decoded.metadata, Some(metadata));
-    assert_eq!(decoded.image_data.as_ref(), &[0x89, b'P', b'N', b'G']);
+    assert_eq!(decoded.image_data.as_slice(), &[0x89, b'P', b'N', b'G']);
   }
 }
