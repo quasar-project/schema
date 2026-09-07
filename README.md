@@ -70,7 +70,7 @@ use quasar_schema::{PROTO_FILES, PROTO_INCLUDE_DIR};
 
 ```python
 def requirements(self):
-    self.requires("quasar_schema/2.0.0@quasar/dev")
+    self.requires("quasar_schema/2.1.0@quasar/dev")
 ```
 
 ```cmake
