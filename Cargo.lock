@@ -248,9 +248,9 @@ checksum = "e53debba6bda7a793e5f99b8dacf19e626084f525f7829104ba9898f367d85ff"
 
 [[package]]
 name = "mms_ipc_core"
-version = "3.1.0"
+version = "3.1.1"
 source = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-checksum = "04f68ba6cfa78fd7cd0f6e43180a968d12d3936c6d9bfc6a9b1a60b6bb2b4e83"
+checksum = "376e560aaa7591af74149bf3667b92756865d5171bfa669ba8a3685d2fd1e1f3"
 dependencies = [
  "mint",
  "prost",
