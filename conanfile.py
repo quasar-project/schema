@@ -1,7 +1,7 @@
 import os
 
 from conan import ConanFile
-from conan.tools.build import check_min_cppstd
+from conan.tools.build import can_run, check_min_cppstd
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
 from conan.tools.env import VirtualRunEnv
 from conan.tools.files import rmdir
@@ -106,7 +106,7 @@ class QuaSARSchemaRecipe(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-        if not self.conf.get(
+        if can_run(self) and not self.conf.get(
             "tools.build:skip_test", default=False, check_type=bool
         ):
             cmake.test()
