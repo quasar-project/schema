@@ -72,12 +72,25 @@ class QuaSARSchemaRecipe(ConanFile):
         self.options["abseil"].shared = True
         self.options["protobuf"].shared = True
 
+    @property
+    def _build_protoc(self):
+        protobuf = self.dependencies.build["protobuf"]
+        executable = (
+            "protoc.exe"
+            if str(self.settings_build.os) == "Windows"
+            else "protoc"
+        )
+        return os.path.join(protobuf.cpp_info.bindirs[0], executable)
+
     def generate(self):
         deps = CMakeDeps(self)
         deps.generate()
 
         tc = CMakeToolchain(self)
         tc.shared = True
+        tc.cache_variables["protobuf_DIR"] = self.generators_folder
+        tc.cache_variables["absl_DIR"] = self.generators_folder
+        tc.cache_variables["QUASAR_SCHEMA_PROTOC"] = self._build_protoc
 
         mms_dep = self.dependencies["mms_ipc_core"]
         tc.variables["QUASAR_SCHEMA_MMS_PROTO_DIR"] = os.path.join(
