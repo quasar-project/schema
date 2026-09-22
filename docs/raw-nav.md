@@ -138,3 +138,55 @@ frame, and one read may contain several frames.
 The QNAV version, frame size, offsets, payload types, and enum values are a
 stable ABI. Incompatible changes require a new frame/payload version rather
 than changing version 1 in place.
+
+## NavSAR local-track frame (version 2)
+
+Version 2 retains the 136-byte QNAV transport size so it fits the existing
+68-word RadarSH navigation slot. The header has `version=2`,
+`message_type=2`, and `payload_length=120`; magic, sequence, and CRC-32C are
+unchanged. A version-1 decoder must reject this distinct payload. FPGA logic
+copies either frame verbatim and does not interpret its fields.
+
+The version-2 payload records NavSAR's local north/east/up trajectory even
+when GNSS has no fix. All multi-byte values are little-endian. Payload offsets
+are relative to byte 12 of the frame.
+
+| Offset | Type | Field | Meaning |
+| ---: | --- | --- | --- |
+| 0 | `int64` | `host_time_seconds` | Relay UTC receive time, Unix epoch |
+| 8 | `int32` | `host_time_nanos` | 0–999999999 |
+| 12 | `uint32` | `flags` | Bits below |
+| 16 | `uint32` | `fix_quality` | NavSAR GPNAV/GGA quality; 0 means no GNSS fix |
+| 20 | `uint32` | `fix_age_ms` | Age of last valid GNSS solution; 999999 if unavailable |
+| 24 | `uint32` | `origin_id` | Relay-local epoch, changes when NavSAR origin is reset |
+| 28 | `float32` | `d_n_m` | Local displacement north, meters |
+| 32 | `float32` | `d_e_m` | Local displacement east, meters |
+| 36 | `float32` | `d_h_m` | Local displacement up, meters |
+| 40 | `float32` | `v_n_mps` | Local velocity north, m/s |
+| 44 | `float32` | `v_e_mps` | Local velocity east, m/s |
+| 48 | `float32` | `v_h_mps` | Local velocity up, m/s |
+| 52 | `float32` | `yaw_rad` | NavSAR GPINS yaw, radians |
+| 56 | `float32` | `pitch_rad` | NavSAR GPINS pitch, radians |
+| 60 | `float32` | `roll_rad` | NavSAR GPINS roll, radians |
+| 64 | `float32` | `baro_altitude_m` | GPINS barometric altitude |
+| 68 | `float32` | `temperature_c` | GPINS temperature |
+| 72 | `float64` | `gnss_latitude_deg` | WGS84 latitude; zero if GNSS unavailable |
+| 80 | `float64` | `gnss_longitude_deg` | WGS84 longitude; zero if GNSS unavailable |
+| 88 | `float32` | `gnss_altitude_m` | GGA altitude; zero if unavailable |
+| 92 | `float32` | `gnss_speed_mps` | RMC ground speed; zero if unavailable |
+| 96 | `float32` | `gnss_course_rad` | RMC course; zero if unavailable |
+| 100 | `uint32` | `satellites` | GGA satellites in use; zero if unavailable |
+| 104 | `float32` | `hdop` | GGA HDOP; zero if unavailable |
+| 108 | `uint32` | `source` | NavigationSource discriminant from version 1 |
+| 112 | `uint32` | `local_update_counter` | Increments for each accepted GPNAV |
+| 116 | `uint32` | `attitude_update_counter` | Increments for each accepted GPINS |
+
+Flag bit 0 means a GPNAV sample no more than one second old is available; bit
+1 means its `originReady` field is 1; bit 2 means GPINS has been received; bit
+3 means the GNSS coordinate fields are valid. Consumers must use the flags and
+`fix_quality` rather than inferring validity from numeric zero. When GNSS is
+lost, the local displacement and velocity remain recorded as NavSAR reports
+them; they are estimates with potentially growing drift. `origin_id` groups
+samples from one local origin and must not be treated as a geodetic anchor.
+The host time labels reception, not the exact ESP32 sensor epoch. The RadarSH
+period index locates each embedded frame on the radar time axis.
