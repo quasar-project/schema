@@ -153,7 +153,7 @@ are relative to byte 12 of the frame.
 
 | Offset | Type | Field | Meaning |
 | ---: | --- | --- | --- |
-| 0 | `int64` | `host_time_seconds` | Relay UTC receive time, Unix epoch |
+| 0 | `int64` | `host_time_seconds` | Relay UTC publication time, Unix epoch |
 | 8 | `int32` | `host_time_nanos` | 0–999999999 |
 | 12 | `uint32` | `flags` | Bits below |
 | 16 | `uint32` | `fix_quality` | NavSAR GPNAV/GGA quality; 0 means no GNSS fix |
@@ -188,5 +188,5 @@ Flag bit 0 means a GPNAV sample no more than one second old is available; bit
 lost, the local displacement and velocity remain recorded as NavSAR reports
 them; they are estimates with potentially growing drift. `origin_id` groups
 samples from one local origin and must not be treated as a geodetic anchor.
-The host time labels reception, not the exact ESP32 sensor epoch. The RadarSH
+The host time labels publication, not the exact ESP32 sensor epoch. The RadarSH
 period index locates each embedded frame on the radar time axis.
