@@ -205,7 +205,7 @@ are little-endian. Fields not listed as changed retain the version-2 meaning.
 | ---: | --- | --- | --- |
 | 0 | `int64` | `host_receive_unix_ns` | Host wall time when complete GPNAV was parsed, Unix nanoseconds |
 | 8 | `uint32` | `source_sample_time_us` | ESP32 `micros()` at last IMU integration; wraps every 2^32 µs |
-| 12 | `uint32` | `flags` | Version-2 bits 0–4; bit 5 sample clock present; bit 6 SAR time alignment demonstrated; bit 7 attitude counter is GPINS source sequence |
+| 12 | `uint32` | `flags` | Bit 0 historical GPNAV sample present; bit 1 origin ready; bit 2 GPINS fresh at the sample epoch (within 1 s); bit 3 GNSS coordinate valid; bit 4 source sequence present; bit 5 sample clock present; bit 6 SAR time alignment demonstrated; bit 7 attitude counter is GPINS source sequence |
 | 16–68 | as v2 | local and attitude data | Version-2 offsets 16–68 unchanged |
 | 72 | `int32` | `gnss_latitude_e7` | Latitude in degrees × 10^7, zero if invalid |
 | 76 | `int32` | `gnss_longitude_e7` | Longitude in degrees × 10^7, zero if invalid |
@@ -228,5 +228,6 @@ time and queue delay show transport latency but **do not establish a common
 ESP32/radar clock**. A consumer may enable SAR phase compensation only when
 bit 6 is set and `alignment_error_bound_us <= 1000`. The current Relay always
 clears bit 6 and writes `0xffffffff`, until clock synchronization and its error
-bound are measured. A missing GNSS fix does not invalidate the local track;
-GPINS attitude has an independent one-second freshness test.
+bound are measured. A missing GNSS fix and a publication delay over one second
+do not invalidate the historical local sample. GPINS attitude has an independent
+one-second freshness test against the GPNAV source sample clock.
