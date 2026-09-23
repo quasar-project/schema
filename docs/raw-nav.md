@@ -182,7 +182,7 @@ are relative to byte 12 of the frame.
 | 116 | `uint32` | `attitude_update_counter` | Increments for each accepted GPINS |
 
 Flag bit 0 means a GPNAV sample no more than one second old is available; bit
-1 means its `originReady` field is 1; bit 2 means GPINS has been received; bit
+1 means its `originReady` field is 1; bit 2 means GPINS is no more than one second old; bit
 3 means the GNSS coordinate fields are valid. Bit 4 means the local update
 counter came from the ESP32 GPNAV source sequence, allowing gaps before relay
 parsing to be detected. Consumers must use the flags and
@@ -192,3 +192,41 @@ them; they are estimates with potentially growing drift. `origin_id` groups
 samples from one local origin and must not be treated as a geodetic anchor.
 The host time labels publication, not the exact ESP32 sensor epoch. The RadarSH
 period index locates each embedded frame on the radar time axis.
+
+## Timed NavSAR local-track frame (version 3)
+
+Version 3 keeps the 136-byte frame and 120-byte payload, with `version=3` and
+`message_type=3`. It is emitted only when GPNAV provides both its ESP32 source
+sequence and `micros()` sample time. GPINS carries the same sequence and sample
+time. All offsets below are relative to payload byte 0 (frame byte 12); values
+are little-endian. Fields not listed as changed retain the version-2 meaning.
+
+| Offset | Type | Field | Meaning |
+| ---: | --- | --- | --- |
+| 0 | `int64` | `host_receive_unix_ns` | Host wall time when complete GPNAV was parsed, Unix nanoseconds |
+| 8 | `uint32` | `source_sample_time_us` | ESP32 `micros()` at last IMU integration; wraps every 2^32 µs |
+| 12 | `uint32` | `flags` | Version-2 bits 0–4; bit 5 sample clock present; bit 6 SAR time alignment demonstrated; bit 7 attitude counter is GPINS source sequence |
+| 16–68 | as v2 | local and attitude data | Version-2 offsets 16–68 unchanged |
+| 72 | `int32` | `gnss_latitude_e7` | Latitude in degrees × 10^7, zero if invalid |
+| 76 | `int32` | `gnss_longitude_e7` | Longitude in degrees × 10^7, zero if invalid |
+| 80 | `float32` | `gnss_altitude_m` | GGA altitude |
+| 84 | `float32` | `gnss_speed_mps` | RMC ground speed |
+| 88 | `float32` | `gnss_course_rad` | RMC course |
+| 92 | `uint32` | `satellites` | GGA satellites in use |
+| 96 | `float32` | `hdop` | GGA HDOP |
+| 100 | `uint32` | `source` | NavigationSource discriminant |
+| 104 | `uint32` | `local_update_counter` | ESP32 GPNAV source sequence |
+| 108 | `uint32` | `attitude_update_counter` | GPINS source sequence when bit 7 is set |
+| 112 | `uint32` | `receive_to_publication_us` | Elapsed host monotonic time before Relay publication, including EBUSY retries |
+| 116 | `uint32` | `alignment_error_bound_us` | Bound between source sample and radar period; `0xffffffff` means unknown |
+
+The frame is inserted into a particular RadarSH period, so that period index
+binds the sample to a radar record. The source clock is relative to the ESP32
+boot and `origin_id` identifies a Relay parser epoch; use source sequence and
+sample-time wrap handling when reconstructing the local trajectory. Host receive
+time and queue delay show transport latency but **do not establish a common
+ESP32/radar clock**. A consumer may enable SAR phase compensation only when
+bit 6 is set and `alignment_error_bound_us <= 1000`. The current Relay always
+clears bit 6 and writes `0xffffffff`, until clock synchronization and its error
+bound are measured. A missing GNSS fix does not invalidate the local track;
+GPINS attitude has an independent one-second freshness test.
