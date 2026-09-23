@@ -178,12 +178,14 @@ are relative to byte 12 of the frame.
 | 100 | `uint32` | `satellites` | GGA satellites in use; zero if unavailable |
 | 104 | `float32` | `hdop` | GGA HDOP; zero if unavailable |
 | 108 | `uint32` | `source` | NavigationSource discriminant from version 1 |
-| 112 | `uint32` | `local_update_counter` | Increments for each accepted GPNAV |
+| 112 | `uint32` | `local_update_counter` | ESP32 GPNAV source sequence when flag bit 4 is set; otherwise relay-local count of accepted GPNAV |
 | 116 | `uint32` | `attitude_update_counter` | Increments for each accepted GPINS |
 
 Flag bit 0 means a GPNAV sample no more than one second old is available; bit
 1 means its `originReady` field is 1; bit 2 means GPINS has been received; bit
-3 means the GNSS coordinate fields are valid. Consumers must use the flags and
+3 means the GNSS coordinate fields are valid. Bit 4 means the local update
+counter came from the ESP32 GPNAV source sequence, allowing gaps before relay
+parsing to be detected. Consumers must use the flags and
 `fix_quality` rather than inferring validity from numeric zero. When GNSS is
 lost, the local displacement and velocity remain recorded as NavSAR reports
 them; they are estimates with potentially growing drift. `origin_id` groups
