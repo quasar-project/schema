@@ -15,10 +15,10 @@ binary32/binary64 encoding.
 | ---: | ---: | --- | --- |
 | 0 | 4 | `magic` | `0x56414E51`; wire bytes `QNAV` |
 | 4 | 1 | `version` | `1` |
-| 5 | 1 | `message_type` | `1`, navigation telemetry |
+| 5 | 1 | `message_type` | `1`, legacy navigation telemetry; `2`, NavSAR local track |
 | 6 | 2 | `payload_length` | `120` |
 | 8 | 4 | `sequence` | Caller-provided `uint32_t`; wraps naturally |
-| 12 | 120 | `payload` | Raw telemetry described below |
+| 12 | 120 | `payload` | Layout selected by `message_type` |
 | 132 | 4 | `crc32c` | CRC-32C of bytes `[0, 132)` |
 
 CRC parameters are:
@@ -128,7 +128,7 @@ TTY buffering and resynchronization belong to the receiver, not this library:
 
 1. Scan for the four wire bytes `QNAV` (`51 4e 41 56` hexadecimal).
 2. Starting at that candidate, buffer exactly 136 bytes.
-3. Validate the header fields, CRC, and telemetry payload.
+3. Validate the header fields, CRC, and payload for the selected message type.
 4. If validation succeeds, consume the complete frame. If it fails, resume the
    magic scan one byte after the beginning of the failed candidate.
 
@@ -136,98 +136,64 @@ This library intentionally provides no stream decoder. One short read is not a
 frame, and one read may contain several frames.
 
 The QNAV version, frame size, offsets, payload types, and enum values are a
-stable ABI. Incompatible changes require a new frame/payload version rather
-than changing version 1 in place.
+stable ABI. Incompatible changes to an existing message type require a new
+message type or version, rather than changing that payload in place.
 
-## NavSAR local-track frame (version 2)
+## NavSAR local-track message (version 1, message type 2)
 
-Version 2 retains the 136-byte QNAV transport size so it fits the existing
-68-word RadarSH navigation slot. The header has `version=2`,
-`message_type=2`, and `payload_length=120`; magic, sequence, and CRC-32C are
-unchanged. A version-1 decoder must reject this distinct payload. FPGA logic
-copies either frame verbatim and does not interpret its fields.
-
-The version-2 payload records NavSAR's local north/east/up trajectory even
-when GNSS has no fix. All multi-byte values are little-endian. Payload offsets
-are relative to byte 12 of the frame.
+Message type 2 retains the 136-byte QNAV frame and 120-byte payload. It carries
+NavSAR's local north/east/up trajectory, including when GNSS has no fix.
+Message type 1 remains the original geodetic telemetry payload above. Its
+existing decoders reject type 2 and must not reinterpret its bytes. All
+multi-byte values below are little-endian; offsets are relative to frame byte
+12.
 
 | Offset | Type | Field | Meaning |
 | ---: | --- | --- | --- |
-| 0 | `int64` | `host_time_seconds` | Relay UTC publication time, Unix epoch |
-| 8 | `int32` | `host_time_nanos` | 0–999999999 |
+| 0 | `int64` | `host_receive_unix_ns` | Host time when complete GPNAV was parsed, Unix nanoseconds |
+| 8 | `uint32` | `source_sample_time_us` | ESP32 `micros()` at last IMU integration; zero if absent |
 | 12 | `uint32` | `flags` | Bits below |
-| 16 | `uint32` | `fix_quality` | NavSAR GPNAV/GGA quality; 0 means no GNSS fix |
-| 20 | `uint32` | `fix_age_ms` | Age of last valid GNSS solution; 999999 if unavailable |
-| 24 | `uint32` | `origin_id` | Relay-local epoch, changes when NavSAR origin is reset |
+| 16 | `uint32` | `fix_quality` | GPNAV/GGA quality; 0 if no GNSS fix |
+| 20 | `uint32` | `fix_age_ms` | Age of last valid GNSS fix; 999999 if unavailable |
+| 24 | `uint32` | `origin_id` | Relay parser epoch; changes on reconnect or origin reset |
 | 28 | `float32` | `d_n_m` | Local displacement north, meters |
 | 32 | `float32` | `d_e_m` | Local displacement east, meters |
 | 36 | `float32` | `d_h_m` | Local displacement up, meters |
 | 40 | `float32` | `v_n_mps` | Local velocity north, m/s |
 | 44 | `float32` | `v_e_mps` | Local velocity east, m/s |
 | 48 | `float32` | `v_h_mps` | Local velocity up, m/s |
-| 52 | `float32` | `yaw_rad` | NavSAR GPINS yaw, radians |
-| 56 | `float32` | `pitch_rad` | NavSAR GPINS pitch, radians |
-| 60 | `float32` | `roll_rad` | NavSAR GPINS roll, radians |
-| 64 | `float32` | `baro_altitude_m` | GPINS barometric altitude |
-| 68 | `float32` | `temperature_c` | GPINS temperature |
-| 72 | `float64` | `gnss_latitude_deg` | WGS84 latitude; zero if GNSS unavailable |
-| 80 | `float64` | `gnss_longitude_deg` | WGS84 longitude; zero if GNSS unavailable |
-| 88 | `float32` | `gnss_altitude_m` | GGA altitude; zero if unavailable |
-| 92 | `float32` | `gnss_speed_mps` | RMC ground speed; zero if unavailable |
-| 96 | `float32` | `gnss_course_rad` | RMC course; zero if unavailable |
-| 100 | `uint32` | `satellites` | GGA satellites in use; zero if unavailable |
-| 104 | `float32` | `hdop` | GGA HDOP; zero if unavailable |
-| 108 | `uint32` | `source` | NavigationSource discriminant from version 1 |
-| 112 | `uint32` | `local_update_counter` | ESP32 GPNAV source sequence when flag bit 4 is set; otherwise relay-local count of accepted GPNAV |
-| 116 | `uint32` | `attitude_update_counter` | Increments for each accepted GPINS |
-
-Flag bit 0 means a GPNAV sample no more than one second old is available; bit
-1 means its `originReady` field is 1; bit 2 means GPINS is no more than one second old; bit
-3 means the GNSS coordinate fields are valid. Bit 4 means the local update
-counter came from the ESP32 GPNAV source sequence, allowing gaps before relay
-parsing to be detected. Consumers must use the flags and
-`fix_quality` rather than inferring validity from numeric zero. When GNSS is
-lost, the local displacement and velocity remain recorded as NavSAR reports
-them; they are estimates with potentially growing drift. `origin_id` groups
-samples from one local origin and must not be treated as a geodetic anchor.
-The host time labels publication, not the exact ESP32 sensor epoch. The RadarSH
-period index locates each embedded frame on the radar time axis.
-
-## Timed NavSAR local-track frame (version 3)
-
-Version 3 keeps the 136-byte frame and 120-byte payload, with `version=3` and
-`message_type=3`. It is emitted only when GPNAV provides both its ESP32 source
-sequence and `micros()` sample time. GPINS carries the same sequence and sample
-time. All offsets below are relative to payload byte 0 (frame byte 12); values
-are little-endian. Fields not listed as changed retain the version-2 meaning.
-
-| Offset | Type | Field | Meaning |
-| ---: | --- | --- | --- |
-| 0 | `int64` | `host_receive_unix_ns` | Host wall time when complete GPNAV was parsed, Unix nanoseconds |
-| 8 | `uint32` | `source_sample_time_us` | ESP32 `micros()` at last IMU integration; wraps every 2^32 µs |
-| 12 | `uint32` | `flags` | Bit 0 historical GPNAV sample present; bit 1 origin ready; bit 2 GPINS fresh at the sample epoch (within 1 s); bit 3 GNSS coordinate valid; bit 4 source sequence present; bit 5 sample clock present; bit 6 SAR time alignment demonstrated; bit 7 attitude counter is GPINS source sequence |
-| 16–68 | as v2 | local and attitude data | Version-2 offsets 16–68 unchanged |
-| 72 | `int32` | `gnss_latitude_e7` | Latitude in degrees × 10^7, zero if invalid |
-| 76 | `int32` | `gnss_longitude_e7` | Longitude in degrees × 10^7, zero if invalid |
+| 52 | `float32` | `yaw_rad` | GPINS yaw, zero if attitude invalid |
+| 56 | `float32` | `pitch_rad` | GPINS pitch, zero if invalid |
+| 60 | `float32` | `roll_rad` | GPINS roll, zero if invalid |
+| 64 | `float32` | `baro_altitude_m` | GPINS altitude, zero if invalid |
+| 68 | `float32` | `temperature_c` | GPINS temperature, zero if invalid |
+| 72 | `int32` | `gnss_latitude_e7` | WGS84 latitude in degrees × 10^7, zero if invalid |
+| 76 | `int32` | `gnss_longitude_e7` | WGS84 longitude in degrees × 10^7, zero if invalid |
 | 80 | `float32` | `gnss_altitude_m` | GGA altitude |
 | 84 | `float32` | `gnss_speed_mps` | RMC ground speed |
 | 88 | `float32` | `gnss_course_rad` | RMC course |
 | 92 | `uint32` | `satellites` | GGA satellites in use |
 | 96 | `float32` | `hdop` | GGA HDOP |
 | 100 | `uint32` | `source` | NavigationSource discriminant |
-| 104 | `uint32` | `local_update_counter` | ESP32 GPNAV source sequence |
-| 108 | `uint32` | `attitude_update_counter` | GPINS source sequence when bit 7 is set |
-| 112 | `uint32` | `receive_to_publication_us` | Elapsed host monotonic time before Relay publication, including EBUSY retries |
-| 116 | `uint32` | `alignment_error_bound_us` | Bound between source sample and radar period; `0xffffffff` means unknown |
+| 104 | `uint32` | `local_update_counter` | ESP32 GPNAV sequence if flag bit 4 set |
+| 108 | `uint32` | `attitude_update_counter` | GPINS sequence if flag bit 7 set |
+| 112 | `uint32` | `receive_to_publication_us` | Host monotonic delay, including EBUSY retries |
+| 116 | `uint32` | `alignment_error_bound_us` | Source-to-radar clock error bound; 0xffffffff means unknown |
 
-The frame is inserted into a particular RadarSH period, so that period index
-binds the sample to a radar record. The source clock is relative to the ESP32
-boot and `origin_id` identifies a Relay parser epoch; use source sequence and
-sample-time wrap handling when reconstructing the local trajectory. Host receive
-time and queue delay show transport latency but **do not establish a common
-ESP32/radar clock**. A consumer may enable SAR phase compensation only when
-bit 6 is set and `alignment_error_bound_us <= 1000`. The current Relay always
-clears bit 6 and writes `0xffffffff`, until clock synchronization and its error
-bound are measured. A missing GNSS fix and a publication delay over one second
-do not invalidate the historical local sample. GPINS attitude has an independent
-one-second freshness test against the GPNAV source sample clock.
+Flag bit 0 means a historical GPNAV point is present. Bit 1 means its local
+origin is ready. Bit 2 means GPINS was fresh at the GPNAV sample epoch (within
+one second); without a source clock, host receive age is used. Bit 3 means GNSS
+coordinates are valid. Bit 4 means the local counter came from ESP32. Bit 5
+means source sample time is present. Bit 6 means SAR time alignment was
+demonstrated. Bit 7 means the attitude counter came from ESP32. Consumers must
+use flags and fix quality instead of inferring validity from numeric zeros.
+
+The frame is inserted in one RadarSH period, which binds the sample to a radar
+record. The ESP32 clock is relative to its boot and wraps every 2^32 µs; use
+`origin_id`, source sequence, and wrap handling to reconstruct the local track.
+Host receive time and publication delay expose transport latency but do not
+establish a common ESP32/radar clock. SAR phase compensation is permitted only
+when bit 6 is set and `alignment_error_bound_us <= 1000`. Current Relay leaves
+bit 6 clear and records `0xffffffff` until synchronization is measured. A
+missing GNSS fix or a publication delay over one second does not invalidate the
+historical local point.

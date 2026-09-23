@@ -17,6 +17,8 @@ pub const TELEMETRY_SIZE: usize = 120;
 pub const NAV_FRAME_MAGIC: u32 = 0x5641_4e51;
 pub const NAV_FRAME_VERSION: u8 = 1;
 pub const NAV_FRAME_MESSAGE_TYPE_TELEMETRY: u8 = 1;
+/// NavSAR local trajectory payload carried in the same version-1 envelope.
+pub const NAV_FRAME_MESSAGE_TYPE_LOCAL_TRACK: u8 = 2;
 pub const NAV_FRAME_HEADER_SIZE: usize = 12;
 pub const NAV_FRAME_PAYLOAD_SIZE: usize = TELEMETRY_SIZE;
 pub const NAV_TELEMETRY_FRAME_V1_SIZE: usize = 136;
