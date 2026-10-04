@@ -3,10 +3,11 @@ syntax = "proto3";
 import public "google/protobuf/struct.proto";
 import public "google/protobuf/timestamp.proto";
 
-import public "mms/latlon.proto";
+import public "radar/mms/common/latlon.proto";
 
 package quasar.pb.route;
 
+// todo: migrate to tracklib
 message Track {
   message Point {
     message Event {
@@ -25,7 +26,7 @@ message Track {
       google.protobuf.Struct metadata = 4;
     }
 
-    mms.pb.LatLon coordinate = 1;
+    radar.mms.pb.LatLon coordinate = 1;
     google.protobuf.Timestamp timestamp = 2;
 
     // Absence means a normal track point.

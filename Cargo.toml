@@ -1,6 +1,6 @@
 [package]
 name = "quasar_schema"
-version = "2.1.0"
+version = "3.0.0"
 edition = "2024"
 authors = ["whs31 <whs31@github.io>"]
 keywords = ["protocol", "network", "uav", "protobuf"]
@@ -11,15 +11,15 @@ doctest = false
 
 [features]
 default = []
-serde = ["dep:serde", "wkt", "mms_ipc_core/serde"]
-legacy = ["mms_ipc_core/legacy"]
+serde = ["dep:serde", "wkt", "rcommon_schema/serde"]
+legacy = ["rcommon_schema/legacy"]
 wkt = []
-vendored-protobuf = ["dep:protobuf-src", "mms_ipc_core/vendored-protobuf"]
+vendored-protobuf = ["dep:protobuf-src", "rcommon_schema/vendored-protobuf"]
 
 
 [dependencies]
 bytemuck = { version = "1.24", features = ["derive"] }
-mms_ipc_core = { version = "3.1.1", registry = "whs31" }
+rcommon_schema = { version = "3.0.5", registry = "whs31" }
 
 prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }
@@ -29,4 +29,4 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [build-dependencies]
 prost-build = "0.14"
 protobuf-src = { version = "2", optional = true }
-mms_ipc_core = { version = "3.1.1", registry = "whs31" }
+rcommon_schema = { version = "3.0.5", registry = "whs31" }

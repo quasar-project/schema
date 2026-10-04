@@ -3,8 +3,8 @@ syntax = "proto3";
 import "google/protobuf/duration.proto";
 import "google/protobuf/wrappers.proto";
 
-import public "mms/dim.proto";
-import public "mms/sockaddr.proto";
+import public "radar/mms/common/dim.proto";
+import public "radar/mms/common/sockaddr.proto";
 
 package quasar.pb;
 
@@ -249,7 +249,7 @@ message SharedFormArgs {
   /// Сервер для фоновой передачи результата в формате IPv4:port.
   ///
   /// Ключ: `-r`, `--remote`
-  mms.pb.SockaddrV4 remote = 25;
+  radar.mms.pb.SockaddrV4 remote = 25;
 
   /// Параметры управления аппаратной частью, общие для режимов формирования.
   ///
@@ -311,7 +311,7 @@ message AutofocusArgs {
   /// Координаты X и Y центра сектора фокусировки в метрах, через запятую
   ///
   /// Ключ: `--center`, `--autofocus-center`
-  mms.pb.Dim2 autofocus_center = 2;
+  radar.mms.pb.Dim2 autofocus_center = 2;
 
   /// Сторона квадрата сектора фокусировки в метрах
   ///

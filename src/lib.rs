@@ -2,7 +2,7 @@ include!(concat!(env!("OUT_DIR"), "/_includes.rs"));
 
 pub mod raw;
 
-pub use mms_ipc_core::mms::pb::*;
+pub use rcommon_schema::radar::mms::pb::*;
 pub use quasar::pb::*;
 
 /// Include path containing the QuaSAR Schema `.proto` files.

@@ -6,8 +6,8 @@ import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/empty.proto";
 import public "google/protobuf/duration.proto";
 
-import public "mms/uuid.proto";
-import public "mms/sockaddr.proto";
+import public "radar/mms/common/uuid.proto";
+import public "radar/mms/common/sockaddr.proto";
 
 import public "quasar/args.proto";
 import public "quasar/error.proto";
@@ -35,11 +35,11 @@ message Request {
   option (quasar.pb.zmq_flow) = "ground/control DEALER -> SAR ROUTER";
 
   message Header {
-    mms.pb.Uuid request_id = 1;
+    radar.mms.pb.Uuid request_id = 1;
   }
 
   message Tty {
-    mms.pb.SockaddrV4 address = 1;
+    radar.mms.pb.SockaddrV4 address = 1;
     bool force_color = 2;
   }
 
@@ -100,7 +100,7 @@ message Response {
   oneof body {
     google.protobuf.Empty ok = 2;
     Error error = 3;
-    mms.pb.Uuid hardware_id = 4;
+    radar.mms.pb.Uuid hardware_id = 4;
     BoardInfo board_info = 5;
     SystemInfo system_info = 6;
     Request.Tty tty = 7;

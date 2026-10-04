@@ -5,7 +5,7 @@ package quasar.pb.power_switch;
 import public "google/protobuf/empty.proto";
 import public "google/protobuf/timestamp.proto";
 
-import public "mms/uuid.proto";
+import public "radar/mms/common/uuid.proto";
 
 import public "quasar/error.proto";
 import public "quasar/zmq.proto";
@@ -42,7 +42,7 @@ message Request {
   option (quasar.pb.zmq_flow) = "ground/control DEALER -> PowerSwitch ROUTER";
 
   message Header {
-    mms.pb.Uuid request_id = 1;
+    radar.mms.pb.Uuid request_id = 1;
   }
 
   message ToggleChannelRequest {

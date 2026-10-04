@@ -6,13 +6,13 @@ import public "google/protobuf/timestamp.proto";
 import public "google/protobuf/empty.proto";
 import public "google/protobuf/duration.proto";
 
-import public "mms/angle.proto";
-import public "mms/latlon.proto";
-import public "mms/euler_angles.proto";
-import public "mms/dim.proto";
-import public "mms/uuid.proto";
-import public "mms/velocity.proto";
-import public "mms/distance.proto";
+import public "radar/mms/common/angle.proto";
+import public "radar/mms/common/latlon.proto";
+import public "radar/mms/common/euler_angles.proto";
+import public "radar/mms/common/dim.proto";
+import public "radar/mms/common/uuid.proto";
+import public "radar/mms/common/velocity.proto";
+import public "radar/mms/common/distance.proto";
 
 import public "quasar/zmq.proto";
 import public "quasar/error.proto";
@@ -42,17 +42,17 @@ message Telemetry {
   option (quasar.pb.zmq_socket) = ZMQ_SOCKET_PUB;
   option (quasar.pb.zmq_flow) = "Nav telemetry PUB -> subscribers";
 
-  mms.pb.LatLon coordinate = 1;
-  mms.pb.Distance altitude = 2;
-  mms.pb.Distance altitude_barometric = 15;
-  mms.pb.Velocity velocity_longitudinal = 3; // former velocity_course
-  mms.pb.Velocity velocity_lateral = 17;
-  mms.pb.Velocity velocity_vertical = 4;
-  mms.pb.Dim3 gyroscope = 5;
-  mms.pb.Dim3 accelerometer = 6;
-  mms.pb.Dim3 compass = 11;
-  mms.pb.Angle gps_course = 16;
-  mms.pb.EulerAngles euler_axes = 7;
+  radar.mms.pb.LatLon coordinate = 1;
+  radar.mms.pb.Distance altitude = 2;
+  radar.mms.pb.Distance altitude_barometric = 15;
+  radar.mms.pb.Velocity velocity_longitudinal = 3; // former velocity_course
+  radar.mms.pb.Velocity velocity_lateral = 17;
+  radar.mms.pb.Velocity velocity_vertical = 4;
+  radar.mms.pb.Dim3 gyroscope = 5;
+  radar.mms.pb.Dim3 accelerometer = 6;
+  radar.mms.pb.Dim3 compass = 11;
+  radar.mms.pb.Angle gps_course = 16;
+  radar.mms.pb.EulerAngles euler_axes = 7;
   google.protobuf.Timestamp timestamp = 8;
   float pressure = 9;
   float temperature = 10;
@@ -67,14 +67,14 @@ message Request {
   option (quasar.pb.zmq_flow) = "ground/control DEALER -> Nav ROUTER";
 
   message Header {
-    mms.pb.Uuid request_id = 1;
+    radar.mms.pb.Uuid request_id = 1;
   }
 
   message SimulateLineRequest {
-    mms.pb.LatLon start = 1;
-    mms.pb.Velocity speed_mps = 2;
-    mms.pb.Distance altitude = 3;
-    mms.pb.Angle heading = 4;
+    radar.mms.pb.LatLon start = 1;
+    radar.mms.pb.Velocity speed_mps = 2;
+    radar.mms.pb.Distance altitude = 3;
+    radar.mms.pb.Angle heading = 4;
     google.protobuf.Duration interval = 5;
   }
 

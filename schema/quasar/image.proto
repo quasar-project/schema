@@ -2,11 +2,11 @@ syntax = "proto3";
 
 import public "google/protobuf/duration.proto";
 
-import public "mms/angle.proto";
-import public "mms/dim.proto";
-import public "mms/distance.proto";
-import public "mms/latlon.proto";
-import public "mms/velocity.proto";
+import public "radar/mms/common/angle.proto";
+import public "radar/mms/common/dim.proto";
+import public "radar/mms/common/distance.proto";
+import public "radar/mms/common/latlon.proto";
+import public "radar/mms/common/velocity.proto";
 
 package quasar.pb;
 
@@ -38,20 +38,20 @@ message ImageMetadata {
     "fic", "timestamp", "sar_mode", "valid_checksum";
 
   ImageType image_type = 2;
-  mms.pb.Distance near_edge = 7;
-  mms.pb.Distance frame_offset = 8;
-  mms.pb.Angle angle = 11;
-  mms.pb.Angle drift_angle = 12;
-  mms.pb.Angle divergence_angle = 13;
-  mms.pb.Velocity velocity = 14;
-  mms.pb.Distance altitude = 15;
+  radar.mms.pb.Distance near_edge = 7;
+  radar.mms.pb.Distance frame_offset = 8;
+  radar.mms.pb.Angle angle = 11;
+  radar.mms.pb.Angle drift_angle = 12;
+  radar.mms.pb.Angle divergence_angle = 13;
+  radar.mms.pb.Velocity velocity = 14;
+  radar.mms.pb.Distance altitude = 15;
   float frequency_interpolation_coefficient = 16;
   google.protobuf.Duration time_offset = 17;
   google.protobuf.Duration time_duration = 18;
   uint32 mode = 20;
-  mms.pb.LatLon coordinate = 22;
-  mms.pb.Dim2 pixel_size = 23;
-  mms.pb.Dim2 size = 24;
+  radar.mms.pb.LatLon coordinate = 22;
+  radar.mms.pb.Dim2 pixel_size = 23;
+  radar.mms.pb.Dim2 size = 24;
   optional RadarSignalParameters radar = 25;
   optional uint32 crc = 26;
 }

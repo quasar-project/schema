@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.23)
 
+message(DEBUG "Using ${CMAKE_TOOLCHAIN_FILE}")
+message(DEBUG "Tests: ${BUILD_TESTING}")
+
 include_guard(GLOBAL)
 
 project(quasar_schema
@@ -35,7 +38,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-find_package(MMSIPCCore CONFIG REQUIRED)
+find_package(RCommonSchema CONFIG REQUIRED)
 
 find_package(protobuf CONFIG QUIET)
 if(NOT TARGET protobuf::protobuf AND NOT TARGET protobuf::libprotobuf)
@@ -67,17 +70,10 @@ message(STATUS "Using protoc: ${QUASAR_SCHEMA_PROTOC}")
 
 set(QUASAR_SCHEMA_SCHEMA_DIR "${CMAKE_CURRENT_SOURCE_DIR}/schema")
 set(QUASAR_SCHEMA_GENERATED_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
-set(QUASAR_SCHEMA_Z_PROTO_DIR "" CACHE PATH "Path to the mms_ipc_core schema directory containing mms/*.proto")
+set(QUASAR_SCHEMA_Z_PROTO_DIR "" CACHE PATH "Path to the rcommon_schema schema directory containing radar/mms/common/*.proto")
 
-if(NOT QUASAR_SCHEMA_MMS_PROTO_DIR)
-  set(_quasar_schema_local_mms_schema "${CMAKE_CURRENT_SOURCE_DIR}/../mms/protocol/schema")
-  if(EXISTS "${_quasar_schema_local_mms_schema}/mms")
-    set(QUASAR_SCHEMA_MMS_PROTO_DIR "${_quasar_schema_local_mms_schema}" CACHE PATH "" FORCE)
-  endif()
-endif()
-
-if(NOT IS_DIRECTORY "${QUASAR_SCHEMA_MMS_PROTO_DIR}/mms")
-  message(FATAL_ERROR "QUASAR_SCHEMA_MMS_PROTO_DIR must point to the mms_ipc_core schema directory containing mms/*.proto")
+if(NOT IS_DIRECTORY "${QUASAR_SCHEMA_MMS_PROTO_DIR}/radar/mms/common")
+  message(FATAL_ERROR "QUASAR_SCHEMA_MMS_PROTO_DIR must point to the rcommon_schema schema directory containing radar/mms/common/*.proto")
 endif()
 
 file(GLOB_RECURSE QUASAR_SCHEMA_PROTO_FILES CONFIGURE_DEPENDS
@@ -153,9 +149,9 @@ endif()
 
 target_link_libraries(${PROJECT_NAME}
   PUBLIC
-    ${PROJECT_NAME}_ffi
-    mms::ipc_core
-    ${QUASAR_SCHEMA_PROTOBUF_TARGET}
+  ${PROJECT_NAME}_ffi
+  radar::mms::common::schema
+  ${QUASAR_SCHEMA_PROTOBUF_TARGET}
 )
 
 set_target_properties(${PROJECT_NAME} PROPERTIES

@@ -1,8 +1,8 @@
 requirements:
-  mms_ipc_core: "[>=3.1]"
+  rcommon_schema: "[>=3.0.5 <4]"
   protobuf: "6.33.5"
   abseil: "20260107.1"
 
 build_requirements:
-  cmake: "[>=3.23.5]"
+  cmake: "[>=4.4.3]"
   protobuf: "<host_version>"

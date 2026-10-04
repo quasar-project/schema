@@ -22,14 +22,14 @@ descriptor options from `quasar/zmq.proto`.
 ## Schema Layout
 
 All schema files use `syntax = "proto3"`.
-Shared domain types come from `mms_ipc_core` / `mms::ipc_core`:
-- `mms.pb.Uuid`
-- `mms.pb.LatLon`
-- `mms.pb.Dim3`
-- `mms.pb.EulerAngles`
-- `mms.pb.Sockaddr`
-- `mms.pb.SockaddrV4`
-- `mms.pb.Version`
+Shared domain types come from `rcommon_schema` / `radar::mms::common::schema`:
+- `radar.mms.pb.Uuid`
+- `radar.mms.pb.LatLon`
+- `radar.mms.pb.Dim3`
+- `radar.mms.pb.EulerAngles`
+- `radar.mms.pb.Sockaddr`
+- `radar.mms.pb.SockaddrV4`
+- `radar.mms.pb.Version`
 
 See [docs/zmq.md](docs/zmq.md) for socket roles and message flow.
 
@@ -51,7 +51,7 @@ Feature flags:
 
 | Feature | Effect                                                                          |
 | --- |---------------------------------------------------------------------------------|
-| `serde` | Adds serde derives to generated messages/enums and enables `mms_ipc_core/serde` |
+| `serde` | Adds serde derives to generated messages/enums and enables `rcommon_schema/serde` |
 | `legacy` | Passes `--experimental_allow_proto3_optional` to `protoc`                       |
 | `wkt` | Generates local Rust code for Google well-known types                           |
 | `vendored-protobuf` | Uses the `protobuf-src` crate to provide `protoc`                               |

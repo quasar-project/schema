@@ -9,7 +9,7 @@ from conan.tools.files import rmdir
 
 class QuaSARSchemaRecipe(ConanFile):
     name = "quasar_schema"
-    version = "2.1.0"
+    version = "3.0.0"
     package_type = "shared-library"
     description = "QuaSAR Schema protobuf contract"
     author = "whs31 <whs31@github.io>"
@@ -40,7 +40,7 @@ class QuaSARSchemaRecipe(ConanFile):
 
     def requirements(self):
         self.req(
-            "mms_ipc_core@radar/dev",
+            "rcommon_schema@radar/dev",
             transitive_libs=True,
             transitive_headers=True,
         )
@@ -92,7 +92,7 @@ class QuaSARSchemaRecipe(ConanFile):
         tc.cache_variables["absl_DIR"] = self.generators_folder
         tc.cache_variables["QUASAR_SCHEMA_PROTOC"] = self._build_protoc
 
-        mms_dep = self.dependencies["mms_ipc_core"]
+        mms_dep = self.dependencies["rcommon_schema"]
         tc.variables["QUASAR_SCHEMA_MMS_PROTO_DIR"] = os.path.join(
             mms_dep.package_folder,
             "schema",
@@ -131,7 +131,7 @@ class QuaSARSchemaRecipe(ConanFile):
         schema.libs = ["quasar_schema"]
         schema.requires = [
             "ffi",
-            "mms_ipc_core::mms_ipc_core",
+            "rcommon_schema::rcommon_schema",
             "protobuf::protobuf",
             "abseil::abseil",
         ]
