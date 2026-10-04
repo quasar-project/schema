@@ -1,5 +1,5 @@
 requirements:
-  rcommon_schema: "[>=3.0.5 <4]"
+  rcommon_schema: "[>=4 <5]"
   protobuf: "6.33.5"
   abseil: "20260107.1"
 
