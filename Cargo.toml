@@ -1,6 +1,6 @@
 [package]
 name = "quasar_schema"
-version = "3.0.0"
+version = "3.1.0"
 edition = "2024"
 authors = ["whs31 <whs31@github.io>"]
 keywords = ["protocol", "network", "uav", "protobuf"]
@@ -19,7 +19,7 @@ vendored-protobuf = ["dep:protobuf-src", "rcommon_schema/vendored-protobuf"]
 
 [dependencies]
 bytemuck = { version = "1.24", features = ["derive"] }
-rcommon_schema = { version = "3.0.5", registry = "whs31" }
+rcommon_schema = { version = "4.0", registry = "whs31" }
 
 prost = { version = "0.14", features = ["default"] }
 prost-types = { version = "0.14", features = ["chrono"] }
@@ -29,4 +29,4 @@ serde = { version = "1.0", features = ["derive"], optional = true }
 [build-dependencies]
 prost-build = "0.14"
 protobuf-src = { version = "2", optional = true }
-rcommon_schema = { version = "3.0.5", registry = "whs31" }
+rcommon_schema = { version = "4.0", registry = "whs31" }

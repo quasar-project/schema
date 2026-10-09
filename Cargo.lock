@@ -366,7 +366,7 @@ dependencies = [
 
 [[package]]
 name = "quasar_schema"
-version = "3.0.0"
+version = "3.0.1"
 dependencies = [
  "bytemuck",
  "prost",
@@ -388,9 +388,9 @@ dependencies = [
 
 [[package]]
 name = "rcommon_schema"
-version = "3.0.5"
+version = "4.0.0"
 source = "sparse+https://af.whs31.com/artifactory/api/cargo/quasar-cargo/index/"
-checksum = "5d15c045f087f6df10a51c9afc71eb935c858f5d9aea5ccdf9054428c63ffba6"
+checksum = "065f3b67413951c572615785ecc3e75251c64a6e338d19ad01894dc995169c08"
 dependencies = [
  "mint",
  "prost",
