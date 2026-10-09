@@ -51,7 +51,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Fetch Rust dependencies
-        run: cargo fetch --locked
+        run: cargo fetch 
 
       - name: Save Cargo cache
         if: steps.cargo-cache.outputs.cache-hit != 'true'
@@ -63,7 +63,7 @@ jobs:
           key: ${{ steps.cargo-cache.outputs.cache-primary-key }}
 
       - name: Build Rust
-        run: cargo build --workspace --locked --verbose
+        run: cargo build --workspace --verbose
 
   conan-deps:
     name: Warm Conan dependencies
